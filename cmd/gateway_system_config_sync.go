@@ -116,11 +116,7 @@ func seedConfigForContext(ctx context.Context, sc store.SystemConfigStore, cfg *
 	setInt("tools.rate_limit_per_hour", cfg.Tools.RateLimitPerHour)
 	setBool("tools.scrub_credentials", cfg.Tools.ScrubCredentials)
 
-	// TTS
-	set("tts.provider", cfg.Tts.Provider)
-	set("tts.auto", cfg.Tts.Auto)
-	set("tts.mode", cfg.Tts.Mode)
-	setInt("tts.max_length", cfg.Tts.MaxLength)
+	// TTS removed in v3.x
 
 	// Cron
 	setInt("cron.max_retries", cfg.Cron.MaxRetries)

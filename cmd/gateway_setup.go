@@ -24,7 +24,6 @@ import (
 	"github.com/nextlevelbuilder/goclaw/internal/store/pg"
 	"github.com/nextlevelbuilder/goclaw/internal/tools"
 	"github.com/nextlevelbuilder/goclaw/internal/tracing"
-	"github.com/nextlevelbuilder/goclaw/internal/tts"
 	"github.com/nextlevelbuilder/goclaw/pkg/browser"
 	"github.com/nextlevelbuilder/goclaw/pkg/protocol"
 )
@@ -130,24 +129,9 @@ func setupToolRegistry(
 	toolsReg.Register(tools.NewReadImageTool(providerRegistry))
 	toolsReg.Register(tools.NewCreateImageTool(providerRegistry))
 
-	// Audio system: build Manager first so Music/SFX providers are registered
-	// before the create_audio tool is constructed.
-	ttsMgr := setupTTS(cfg)
-	if ttsMgr == nil {
-		ttsMgr = tts.NewManager(tts.ManagerConfig{})
-	}
-	setupAudioExtras(cfg, ttsMgr)      // Phase 3: registers Music + SFX providers.
-	audio.BridgeLegacySTT(ttsMgr, cfg) // Phase 4: bridge per-channel STTProxyURL → channel-scoped providers.
-	audioMgr = ttsMgr                  // expose to caller for channel STT wiring (Phase 5)
-
-	// Audio generation tool — backed by audio.Manager (Music + SFX).
-	toolsReg.Register(tools.NewCreateAudioTool(ttsMgr))
-
-	ttsTool = tools.NewTtsTool(ttsMgr)
-	toolsReg.Register(ttsTool)
-	if ttsMgr.HasProviders() {
-		slog.Info("tts enabled", "provider", ttsMgr.PrimaryProvider(), "auto", string(ttsMgr.AutoMode()))
-	}
+	// TTS removed in v3.x
+	ttsTool = nil
+	audioMgr = nil
 
 	// Tool rate limiting (per session, sliding window)
 	if cfg.Tools.RateLimitPerHour > 0 {

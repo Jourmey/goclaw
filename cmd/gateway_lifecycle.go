@@ -27,7 +27,7 @@ type lifecycleDeps struct {
 	heartbeatTicker   *heartbeat.Ticker
 	quotaChecker      *channels.QuotaChecker
 	webFetchTool      *tools.WebFetchTool
-	ttsTool           *tools.TtsTool
+	// TTS removed in v3.x
 	sandboxMgr        sandbox.Manager
 	postTurn          tools.PostTurnProcessor
 	subagentMgr       *tools.SubagentManager
@@ -100,15 +100,7 @@ func (d *gatewayDeps) runLifecycle(
 				updatedCfg.ApplyDBSecrets(secrets)
 			}
 		}
-		newMgr := setupTTS(updatedCfg)
-		if newMgr == nil {
-			return
-		}
-		deps.ttsTool.UpdateManager(newMgr)
-		if d.ttsHandler != nil {
-			d.ttsHandler.UpdateManager(newMgr)
-		}
-		slog.Info("tts config reloaded", "provider", newMgr.PrimaryProvider(), "auto", string(newMgr.AutoMode()))
+		// TTS removed in v3.x
 	})
 
 	// Note: vault enrichment provider is resolved per-tenant at runtime,

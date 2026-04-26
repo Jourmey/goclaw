@@ -53,10 +53,7 @@ func (c *Config) MaskedCopy() *Config {
 	maskNonEmpty(&cp.Channels.Feishu.EncryptKey)
 	maskNonEmpty(&cp.Channels.Feishu.VerificationToken)
 
-	// Mask TTS API keys
-	maskNonEmpty(&cp.Tts.OpenAI.APIKey)
-	maskNonEmpty(&cp.Tts.ElevenLabs.APIKey)
-	maskNonEmpty(&cp.Tts.MiniMax.APIKey)
+	// TTS removed in v3.x
 
 	// Mask Tailscale auth key
 	maskNonEmpty(&cp.Tailscale.AuthKey)
@@ -100,10 +97,7 @@ func (c *Config) StripSecrets() {
 	c.Channels.Feishu.EncryptKey = ""
 	c.Channels.Feishu.VerificationToken = ""
 
-	// TTS API keys
-	c.Tts.OpenAI.APIKey = ""
-	c.Tts.ElevenLabs.APIKey = ""
-	c.Tts.MiniMax.APIKey = ""
+	// TTS removed in v3.x
 
 	// Tailscale auth key
 	c.Tailscale.AuthKey = ""
@@ -152,10 +146,7 @@ func (c *Config) StripMaskedSecrets() {
 	stripIfMasked(&c.Channels.Feishu.EncryptKey)
 	stripIfMasked(&c.Channels.Feishu.VerificationToken)
 
-	// TTS API keys
-	stripIfMasked(&c.Tts.OpenAI.APIKey)
-	stripIfMasked(&c.Tts.ElevenLabs.APIKey)
-	stripIfMasked(&c.Tts.MiniMax.APIKey)
+	// TTS removed in v3.x
 
 	// Tailscale auth key
 	stripIfMasked(&c.Tailscale.AuthKey)
@@ -172,10 +163,7 @@ func (c *Config) ApplyDBSecrets(secrets map[string]string) {
 	}
 
 	apply("gateway.token", &c.Gateway.Token)
-	apply("tts.openai.api_key", &c.Tts.OpenAI.APIKey)
-	apply("tts.elevenlabs.api_key", &c.Tts.ElevenLabs.APIKey)
-	apply("tts.minimax.api_key", &c.Tts.MiniMax.APIKey)
-	apply("tts.minimax.group_id", &c.Tts.MiniMax.GroupID)
+	// TTS removed in v3.x
 	apply("tailscale.auth_key", &c.Tailscale.AuthKey)
 }
 
@@ -191,10 +179,7 @@ func (c *Config) ExtractDBSecrets() map[string]string {
 	}
 
 	collect("gateway.token", c.Gateway.Token)
-	collect("tts.openai.api_key", c.Tts.OpenAI.APIKey)
-	collect("tts.elevenlabs.api_key", c.Tts.ElevenLabs.APIKey)
-	collect("tts.minimax.api_key", c.Tts.MiniMax.APIKey)
-	collect("tts.minimax.group_id", c.Tts.MiniMax.GroupID)
+	// TTS removed in v3.x
 	collect("tailscale.auth_key", c.Tailscale.AuthKey)
 
 	return secrets

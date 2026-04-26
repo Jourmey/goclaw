@@ -49,7 +49,7 @@ type Config struct {
 	Tools     ToolsConfig     `json:"tools"`
 	Sessions  SessionsConfig  `json:"sessions"`
 	Database  DatabaseConfig  `json:"database"`
-	Tts       TtsConfig       `json:"tts"`
+	// Tts removed in v3.x
 	Audio     *AudioConfig    `json:"audio,omitempty"` // optional STT/Music defaults (Phase 3/4)
 	Cron      CronConfig      `json:"cron"`
 	Telemetry TelemetryConfig `json:"telemetry"`
@@ -449,7 +449,7 @@ func (c *Config) ReplaceFrom(src *Config) {
 	c.Tools = src.Tools
 	c.Sessions = src.Sessions
 	c.Database = src.Database
-	c.Tts = src.Tts
+	// Tts removed in v3.x
 	c.Cron = src.Cron
 	c.Telemetry = src.Telemetry
 	c.Tailscale = src.Tailscale

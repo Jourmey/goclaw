@@ -4,9 +4,6 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/nextlevelbuilder/goclaw/internal/audio/elevenlabs"
-	geminiaudio "github.com/nextlevelbuilder/goclaw/internal/audio/gemini"
-	minimaxaudio "github.com/nextlevelbuilder/goclaw/internal/audio/minimax"
 	"github.com/nextlevelbuilder/goclaw/internal/bus"
 	"github.com/nextlevelbuilder/goclaw/internal/config"
 	"github.com/nextlevelbuilder/goclaw/internal/memory"
@@ -14,7 +11,6 @@ import (
 	"github.com/nextlevelbuilder/goclaw/internal/sandbox"
 	"github.com/nextlevelbuilder/goclaw/internal/store"
 	"github.com/nextlevelbuilder/goclaw/internal/tools"
-	"github.com/nextlevelbuilder/goclaw/internal/tts"
 )
 
 // resolveEmbeddingProvider selects an embedding provider from DB only.
@@ -245,124 +241,3 @@ func buildSubagentToolsRegistry(
 	return reg, execTool
 }
 
-// setupTTS creates the TTS manager from config and registers providers.
-// Edge TTS is always registered (free, no API key required).
-// Always returns a non-nil manager with at least one provider.
-func setupTTS(cfg *config.Config) *tts.Manager {
-	ttsCfg := cfg.Tts
-
-	mgr := tts.NewManager(tts.ManagerConfig{
-		Primary:   ttsCfg.Provider,
-		Auto:      tts.AutoMode(ttsCfg.Auto),
-		Mode:      tts.Mode(ttsCfg.Mode),
-		MaxLength: ttsCfg.MaxLength,
-		TimeoutMs: ttsCfg.TimeoutMs,
-	})
-
-	// Register providers that have API keys configured
-	if key := ttsCfg.OpenAI.APIKey; key != "" {
-		mgr.RegisterProvider(tts.NewOpenAIProvider(tts.OpenAIConfig{
-			APIKey:    key,
-			APIBase:   ttsCfg.OpenAI.APIBase,
-			Model:     ttsCfg.OpenAI.Model,
-			Voice:     ttsCfg.OpenAI.Voice,
-			TimeoutMs: ttsCfg.TimeoutMs,
-		}))
-	}
-
-	if key := ttsCfg.ElevenLabs.APIKey; key != "" {
-		mgr.RegisterProvider(tts.NewElevenLabsProvider(tts.ElevenLabsConfig{
-			APIKey:    key,
-			BaseURL:   ttsCfg.ElevenLabs.BaseURL,
-			VoiceID:   ttsCfg.ElevenLabs.VoiceID,
-			ModelID:   ttsCfg.ElevenLabs.ModelID,
-			TimeoutMs: ttsCfg.TimeoutMs,
-		}))
-	}
-
-	// Edge TTS is free (no API key) — always register so it's available as primary or fallback.
-	mgr.RegisterProvider(tts.NewEdgeProvider(tts.EdgeConfig{
-		Voice:     ttsCfg.Edge.Voice,
-		Rate:      ttsCfg.Edge.Rate,
-		TimeoutMs: ttsCfg.TimeoutMs,
-	}))
-
-	if key := ttsCfg.MiniMax.APIKey; key != "" {
-		mgr.RegisterProvider(tts.NewMiniMaxProvider(tts.MiniMaxConfig{
-			APIKey:    key,
-			GroupID:   ttsCfg.MiniMax.GroupID,
-			APIBase:   ttsCfg.MiniMax.APIBase,
-			Model:     ttsCfg.MiniMax.Model,
-			VoiceID:   ttsCfg.MiniMax.VoiceID,
-			TimeoutMs: ttsCfg.TimeoutMs,
-		}))
-	}
-
-	if key := ttsCfg.Gemini.APIKey; key != "" {
-		mgr.RegisterProvider(geminiaudio.NewProvider(geminiaudio.Config{
-			APIKey:    key,
-			APIBase:   ttsCfg.Gemini.APIBase,
-			Voice:     ttsCfg.Gemini.Voice,
-			Model:     ttsCfg.Gemini.Model,
-			TimeoutMs: ttsCfg.TimeoutMs,
-		}))
-	}
-
-	if !mgr.HasProviders() {
-		return nil
-	}
-
-	return mgr
-}
-
-// setupAudioExtras wires Music and SFX providers into the audio Manager.
-// ElevenLabs is registered for both SFX and Music when an API key is present.
-// MiniMax music is registered when cfg.Audio.Music is configured with a key.
-// Phase 4 will add STT providers here.
-func setupAudioExtras(cfg *config.Config, mgr *tts.Manager) {
-	ellKey := cfg.Tts.ElevenLabs.APIKey
-	ellBase := cfg.Tts.ElevenLabs.BaseURL
-
-	// ElevenLabs SFX — reuse TTS credentials.
-	if ellKey != "" {
-		mgr.RegisterSFX(elevenlabs.NewSFXProvider(elevenlabs.Config{
-			APIKey:  ellKey,
-			BaseURL: ellBase,
-		}))
-		slog.Info("audio.sfx: elevenlabs registered")
-	}
-
-	// ElevenLabs Music — same credentials, uses /v1/music endpoint.
-	if ellKey != "" {
-		mgr.RegisterMusic(elevenlabs.NewMusicProvider(elevenlabs.Config{
-			APIKey:  ellKey,
-			BaseURL: ellBase,
-		}))
-		slog.Info("audio.music: elevenlabs registered")
-	}
-
-	// MiniMax Music — optional, from cfg.Audio.Music block.
-	if cfg.Audio != nil && cfg.Audio.Music != nil {
-		mc := cfg.Audio.Music
-		if mc.APIKey != "" {
-			mgr.RegisterMusic(minimaxaudio.NewMusicProvider(minimaxaudio.MusicConfig{
-				APIKey:  mc.APIKey,
-				APIBase: mc.BaseURL,
-				Model:   mc.Model,
-			}))
-			slog.Info("audio.music: minimax registered")
-		}
-	}
-
-	// ElevenLabs STT (Scribe v2) — reuse TTS credentials. Registered as tenant-scope
-	// default; per-request tenant override lands via builtin_tools[stt] in Phase 5
-	// channel migration. Legacy per-channel STTProxyURL is bridged separately.
-	if ellKey != "" {
-		mgr.RegisterSTT(elevenlabs.NewSTTProvider(elevenlabs.Config{
-			APIKey:  ellKey,
-			BaseURL: ellBase,
-		}))
-		mgr.SetSTTChain([]string{"elevenlabs", "proxy"})
-		slog.Info("audio.stt: elevenlabs registered")
-	}
-}

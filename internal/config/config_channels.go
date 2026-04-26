@@ -439,61 +439,13 @@ type SessionsConfig struct {
 	MainKey string `json:"main_key,omitempty"` // main session key suffix (default "main", used when dm_scope="main")
 }
 
-// TtsConfig configures text-to-speech.
-// Matching TS src/config/types.tts.ts.
-type TtsConfig struct {
-	Provider   string              `json:"provider,omitempty"`   // "openai", "elevenlabs", "edge", "minimax", "gemini"
-	Auto       string              `json:"auto,omitempty"`       // "off" (default), "always", "inbound", "tagged"
-	Mode       string              `json:"mode,omitempty"`       // "final" (default), "all"
-	MaxLength  int                 `json:"max_length,omitempty"` // max text length before truncation (default 1500)
-	TimeoutMs  int                 `json:"timeout_ms,omitempty"` // API timeout in ms (default 30000)
-	OpenAI     TtsOpenAIConfig     `json:"openai"`
-	ElevenLabs TtsElevenLabsConfig `json:"elevenlabs"`
-	Edge       TtsEdgeConfig       `json:"edge"`
-	MiniMax    TtsMiniMaxConfig    `json:"minimax"`
-	Gemini     TtsGeminiConfig     `json:"gemini"`
-}
-
-// TtsGeminiConfig configures the Google Gemini TTS provider.
-type TtsGeminiConfig struct {
-	APIKey   string `json:"api_key,omitempty"`  // required; encrypted at rest
-	APIBase  string `json:"api_base,omitempty"` // custom endpoint (optional; SSRF-gated)
-	Voice    string `json:"voice,omitempty"`    // default "Kore"
-	Model    string `json:"model,omitempty"`    // default "gemini-2.5-flash-preview-tts"
-	Speakers string `json:"speakers,omitempty"` // JSON-encoded []SpeakerVoice for multi-speaker mode
-}
-
-// TtsOpenAIConfig configures the OpenAI TTS provider.
-type TtsOpenAIConfig struct {
-	APIKey  string `json:"api_key,omitempty"`
-	APIBase string `json:"api_base,omitempty"` // custom endpoint URL
-	Model   string `json:"model,omitempty"`    // default "gpt-4o-mini-tts"
-	Voice   string `json:"voice,omitempty"`    // default "alloy"
-}
-
-// TtsElevenLabsConfig configures the ElevenLabs TTS provider.
-type TtsElevenLabsConfig struct {
-	APIKey  string `json:"api_key,omitempty"`
-	BaseURL string `json:"base_url,omitempty"`
-	VoiceID string `json:"voice_id,omitempty"` // default "pMsXgVXv3BLzUgSXRplE"
-	ModelID string `json:"model_id,omitempty"` // default "eleven_multilingual_v2"
-}
-
-// TtsEdgeConfig configures the Microsoft Edge TTS provider (free, no API key).
-type TtsEdgeConfig struct {
-	Enabled bool   `json:"enabled,omitempty"`
-	Voice   string `json:"voice,omitempty"` // default "en-US-MichelleNeural"
-	Rate    string `json:"rate,omitempty"`  // speech rate, e.g. "+0%"
-}
-
-// TtsMiniMaxConfig configures the MiniMax TTS provider.
-type TtsMiniMaxConfig struct {
-	APIKey  string `json:"api_key,omitempty"`
-	GroupID string `json:"group_id,omitempty"` // MiniMax GroupId (required)
-	APIBase string `json:"api_base,omitempty"` // default "https://api.minimax.io/v1"
-	Model   string `json:"model,omitempty"`    // default "speech-02-hd"
-	VoiceID string `json:"voice_id,omitempty"` // default "Wise_Woman"
-}
+// TTS removed in v3.x
+type TtsConfig struct{} // deprecated stub
+type TtsGeminiConfig struct{}
+type TtsOpenAIConfig struct{}
+type TtsElevenLabsConfig struct{}
+type TtsEdgeConfig struct{}
+type TtsMiniMaxConfig struct{}
 
 // MergeChannelGroupQuotas merges per-group quota overrides from channel configs
 // (e.g., channels.telegram.groups[chatID].quota) into gateway.quota.groups.

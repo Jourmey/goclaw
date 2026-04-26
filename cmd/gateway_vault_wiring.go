@@ -71,16 +71,7 @@ func wireVault(stores *store.Stores, toolsReg *tools.Registry, workspace string,
 			vt.SetVaultInterceptor(vaultIntc)
 		}
 	}
-	if audTool, ok := toolsReg.Get("create_audio"); ok {
-		if at, ok := audTool.(*tools.CreateAudioTool); ok {
-			at.SetVaultInterceptor(vaultIntc)
-		}
-	}
-	if ttsTool, ok := toolsReg.Get("tts"); ok {
-		if tt, ok := ttsTool.(*tools.TtsTool); ok {
-			tt.SetVaultInterceptor(vaultIntc)
-		}
-	}
+	// TTS removed in v3.x (create_audio and tts tools no longer exist)
 	if editTool, ok := toolsReg.Get("edit"); ok {
 		if et, ok := editTool.(*tools.EditTool); ok {
 			et.SetVaultInterceptor(vaultIntc)

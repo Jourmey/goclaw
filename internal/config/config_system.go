@@ -62,11 +62,7 @@ func (c *Config) ApplySystemConfigs(configs map[string]string) {
 	integer("tools.rate_limit_per_hour", &c.Tools.RateLimitPerHour)
 	boolean("tools.scrub_credentials", &c.Tools.ScrubCredentials)
 
-	// TTS
-	str("tts.provider", &c.Tts.Provider)
-	str("tts.auto", &c.Tts.Auto)
-	str("tts.mode", &c.Tts.Mode)
-	integer("tts.max_length", &c.Tts.MaxLength)
+	// TTS removed in v3.x
 
 	// Cron
 	integer("cron.max_retries", &c.Cron.MaxRetries)
