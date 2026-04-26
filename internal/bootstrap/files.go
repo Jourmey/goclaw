@@ -28,19 +28,19 @@ const (
 	UserFile           = "USER.md"
 	UserPredefinedFile = "USER_PREDEFINED.md"
 	BootstrapFile      = "BOOTSTRAP.md"
-	CapabilitiesFile  = "CAPABILITIES.md"
-	AgentsCoreFile    = "AGENTS_CORE.md"
-	AgentsTaskFile    = "AGENTS_TASK.md"
+	CapabilitiesFile   = "CAPABILITIES.md"
+	AgentsCoreFile     = "AGENTS_CORE.md"
+	AgentsTaskFile     = "AGENTS_TASK.md"
 
 	// Deprecated: v1 remnant. Heartbeat uses AGENTS_CORE.md via ModeAllowlist("minimal").
 	AgentsMinimalFile = "AGENTS_MINIMAL.md"
 	DelegationFile    = "DELEGATION.md"
-	TeamFile         = "TEAM.md"
-	AvailabilityFile = "AVAILABILITY.md"
-	HeartbeatFile  = "HEARTBEAT.md"
-	MemoryFile     = "MEMORY.md"
-	MemoryAltFile  = "memory.md"
-	MemoryJSONFile = "MEMORY.json"
+	TeamFile          = "TEAM.md"
+	AvailabilityFile  = "AVAILABILITY.md"
+	HeartbeatFile     = "HEARTBEAT.md"
+	MemoryFile        = "MEMORY.md"
+	MemoryAltFile     = "memory.md"
+	MemoryJSONFile    = "MEMORY.json"
 )
 
 // standardFiles is the ordered list of bootstrap files to load.

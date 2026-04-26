@@ -22,7 +22,7 @@ type ConfigMethods struct {
 	cfgPath      string
 	secretsStore store.ConfigSecretsStore
 	syncFn       func(ctx context.Context, cfg *config.Config) // nil-safe; syncs non-secret settings to system_configs
-	eventBus     bus.EventPublisher       // nil-safe; broadcasts config change events
+	eventBus     bus.EventPublisher                            // nil-safe; broadcasts config change events
 }
 
 func NewConfigMethods(cfg *config.Config, cfgPath string, secretsStore store.ConfigSecretsStore, eventBus bus.EventPublisher) *ConfigMethods {

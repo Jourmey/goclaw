@@ -247,7 +247,7 @@ func TestIsMultiActionSchema(t *testing.T) {
 			want: false,
 		},
 		{
-			name: "nil schema",
+			name:   "nil schema",
 			schema: nil,
 			want:   false,
 		},

@@ -23,8 +23,8 @@ func (t *MemoryExpandTool) SetEpisodicStore(es store.EpisodicStore) {
 	t.episodicStore = es
 }
 
-func (t *MemoryExpandTool) Name() string        { return "memory_expand" }
-func (t *MemoryExpandTool) Description() string  {
+func (t *MemoryExpandTool) Name() string { return "memory_expand" }
+func (t *MemoryExpandTool) Description() string {
 	return "Load full content for a memory entry by ID. Returns the complete episodic summary for deep context."
 }
 

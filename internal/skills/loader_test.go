@@ -602,10 +602,10 @@ description: plain
 			want: nil,
 		},
 		{
-			name: "crlf",
+			name:    "crlf",
 			content: "deps:\r\n  - pip:a\r\n  - pip:b\r\n",
-			key:    "deps",
-			want:   []string{"pip:a", "pip:b"},
+			key:     "deps",
+			want:    []string{"pip:a", "pip:b"},
 		},
 		{
 			name: "scalar skipped",

@@ -23,10 +23,10 @@ var backupInProgress atomic.Bool
 // BackupHandler handles system backup endpoints.
 // All routes require admin role; download/preflight routes further require owner.
 type BackupHandler struct {
-	cfg      *config.Config
-	dsn      string
-	version  string
-	isOwner  func(string) bool
+	cfg     *config.Config
+	dsn     string
+	version string
+	isOwner func(string) bool
 }
 
 // NewBackupHandler creates a handler for system backup endpoints.

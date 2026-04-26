@@ -21,7 +21,7 @@ const (
 type ConfigPermission struct {
 	ID         uuid.UUID       `json:"id" db:"id"`
 	AgentID    uuid.UUID       `json:"agentId" db:"agent_id"`
-	Scope      string          `json:"scope" db:"scope"`           // "agent" | "group:telegram:-100456" | "group:*" | "*"
+	Scope      string          `json:"scope" db:"scope"`            // "agent" | "group:telegram:-100456" | "group:*" | "*"
 	ConfigType string          `json:"configType" db:"config_type"` // "heartbeat" | "cron" | "context_files" | "file_writer" | "*"
 	UserID     string          `json:"userId" db:"user_id"`
 	Permission string          `json:"permission" db:"permission"` // "allow" | "deny"

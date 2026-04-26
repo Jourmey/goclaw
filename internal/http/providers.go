@@ -133,9 +133,6 @@ func (h *ProvidersHandler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /v1/providers/{id}/verify", h.auth(h.handleVerifyProvider))
 	mux.HandleFunc("POST /v1/providers/{id}/verify-embedding", h.auth(h.handleVerifyEmbedding))
 
-	// Provider-scoped Codex pool activity monitor
-	mux.HandleFunc("GET /v1/providers/{id}/codex-pool-activity", h.auth(h.handleProviderCodexPoolActivity))
-
 	// Embedding system status
 	mux.HandleFunc("GET /v1/embedding/status", h.auth(h.handleEmbeddingStatus))
 

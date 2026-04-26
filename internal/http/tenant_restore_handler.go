@@ -21,6 +21,7 @@ import (
 //     tenant_id is rejected for mode=new — the new tenant's UUID is generated
 //     server-side; the archived tenant metadata (name/status/settings) is used
 //     and bound to the provided slug.
+//
 // Only system owners may restore (cross-tenant operation).
 func (h *TenantBackupHandler) handleRestore(w http.ResponseWriter, r *http.Request) {
 	userID := store.UserIDFromContext(r.Context())

@@ -134,7 +134,7 @@ func TestShouldShareSessions_DisabledByDefault(t *testing.T) {
 
 func TestShouldShareSessions_IndependentOfMemory(t *testing.T) {
 	l := &Loop{workspaceSharing: &store.WorkspaceSharingConfig{
-		ShareMemory:    true,
+		ShareMemory:   true,
 		ShareSessions: false,
 	}}
 	if l.shouldShareSessions() {

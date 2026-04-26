@@ -15,10 +15,10 @@ import (
 
 // MemorySearchTool implements the memory_search tool for hybrid semantic + FTS search.
 type MemorySearchTool struct {
-	memStore      store.MemoryStore              // Postgres-backed
-	episodicStore store.EpisodicStore             // v3 episodic memory (nil = v2 fallback)
-	metricsStore  store.EvolutionMetricsStore     // evolution metrics (nil = disabled)
-	hasKG         bool                           // knowledge_graph_search tool is available
+	memStore      store.MemoryStore           // Postgres-backed
+	episodicStore store.EpisodicStore         // v3 episodic memory (nil = v2 fallback)
+	metricsStore  store.EvolutionMetricsStore // evolution metrics (nil = disabled)
+	hasKG         bool                        // knowledge_graph_search tool is available
 }
 
 func NewMemorySearchTool() *MemorySearchTool {

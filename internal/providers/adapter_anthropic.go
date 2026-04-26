@@ -98,8 +98,8 @@ func (a *AnthropicAdapter) FromStreamChunk(data []byte) (*StreamChunk, error) {
 			return &StreamChunk{Content: ev.Delta.Text}, nil
 		case "thinking_delta":
 			return &StreamChunk{Thinking: ev.Delta.Thinking}, nil
-		// input_json_delta and signature_delta are stateful (accumulate across chunks).
-		// Pipeline must track these externally; adapter only handles atomic deltas.
+			// input_json_delta and signature_delta are stateful (accumulate across chunks).
+			// Pipeline must track these externally; adapter only handles atomic deltas.
 		}
 
 	case "message_stop":

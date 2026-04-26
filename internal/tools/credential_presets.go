@@ -19,7 +19,7 @@ type CLIPreset struct {
 type EnvVarDef struct {
 	Name     string `json:"name"`
 	Desc     string `json:"desc"`
-	IsFile   bool   `json:"is_file,omitempty"`   // credential is a file path (e.g. GOOGLE_APPLICATION_CREDENTIALS)
+	IsFile   bool   `json:"is_file,omitempty"` // credential is a file path (e.g. GOOGLE_APPLICATION_CREDENTIALS)
 	Optional bool   `json:"optional,omitempty"`
 }
 

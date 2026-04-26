@@ -1,5 +1,7 @@
 // Package zalo - removed channel stub
 package zalo
 
-// Stub - zalo channel removed
-
+// Factory stub - zalo factory removed
+func Factory() interface{} {
+	return nil
+}

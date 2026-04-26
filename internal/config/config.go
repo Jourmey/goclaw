@@ -141,7 +141,6 @@ type AgentDefaults struct {
 	MaxToolCalls        int                   `json:"max_tool_calls,omitempty"` // max total tool calls per run (0 = unlimited, default 25)
 	AgentType           string                `json:"agent_type,omitempty"`     // "open" (default) or "predefined"
 	Subagents           *SubagentsConfig      `json:"subagents,omitempty"`
-	Sandbox             *SandboxConfig        `json:"sandbox,omitempty"`
 	Memory              *MemoryConfig         `json:"memory,omitempty"`
 	Compaction          *CompactionConfig     `json:"compaction,omitempty"`
 	ContextPruning      *ContextPruningConfig `json:"contextPruning,omitempty"`
@@ -433,7 +432,6 @@ type AgentSpec struct {
 	Tools             *ToolPolicySpec `json:"tools,omitempty"`          // per-agent tool policy
 	Workspace         string          `json:"workspace,omitempty"`
 	Default           bool            `json:"default,omitempty"`
-	Sandbox           *SandboxConfig  `json:"sandbox,omitempty"`
 	Identity          *IdentityConfig `json:"identity,omitempty"`
 }
 

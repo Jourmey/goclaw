@@ -1,4 +1,7 @@
 // Package personal - removed channel stub
 package personal
 
-// Stub - zalo personal channel removed
+// FactoryWithPendingStore stub - zalo personal factory removed
+func FactoryWithPendingStore(msgStore interface{}) interface{} {
+	return nil
+}

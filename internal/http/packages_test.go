@@ -317,17 +317,17 @@ func TestValidPkgNameRegex(t *testing.T) {
 		{"A", true},
 		{"0abc", true}, // can start with number
 		// Invalid
-		{"-invalid", false},      // starts with hyphen
-		{"--flag", false},        // starts with hyphen
-		{"pkg name", false},      // contains space
-		{"pkg;cmd", false},       // contains semicolon
-		{"pkg|cmd", false},       // contains pipe
-		{"pkg&cmd", false},       // contains ampersand
-		{"pkg`cmd`", false},      // contains backtick
-		{"pkg$var", false},       // contains dollar sign
-		{"pkg<file", false},      // contains angle bracket
-		{"pkg>file", false},      // contains angle bracket
-		{"", false},              // empty
+		{"-invalid", false}, // starts with hyphen
+		{"--flag", false},   // starts with hyphen
+		{"pkg name", false}, // contains space
+		{"pkg;cmd", false},  // contains semicolon
+		{"pkg|cmd", false},  // contains pipe
+		{"pkg&cmd", false},  // contains ampersand
+		{"pkg`cmd`", false}, // contains backtick
+		{"pkg$var", false},  // contains dollar sign
+		{"pkg<file", false}, // contains angle bracket
+		{"pkg>file", false}, // contains angle bracket
+		{"", false},         // empty
 	}
 
 	for _, tt := range tests {

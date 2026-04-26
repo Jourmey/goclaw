@@ -221,58 +221,12 @@ func (c *Config) applyEnvOverrides() {
 	envStr("GOCLAW_TSNET_AUTH_KEY", &c.Tailscale.AuthKey)
 	envStr("GOCLAW_TSNET_DIR", &c.Tailscale.StateDir)
 
-	// Sandbox (for Docker-compose sandbox overlay)
-	ensureSandbox := func() {
-		if c.Agents.Defaults.Sandbox == nil {
-			c.Agents.Defaults.Sandbox = &SandboxConfig{}
-		}
-	}
-	if v := os.Getenv("GOCLAW_SANDBOX_MODE"); v != "" {
-		ensureSandbox()
-		c.Agents.Defaults.Sandbox.Mode = v
-	}
-	if v := os.Getenv("GOCLAW_SANDBOX_IMAGE"); v != "" {
-		ensureSandbox()
-		c.Agents.Defaults.Sandbox.Image = v
-	}
-	if v := os.Getenv("GOCLAW_SANDBOX_WORKSPACE_ACCESS"); v != "" {
-		ensureSandbox()
-		c.Agents.Defaults.Sandbox.WorkspaceAccess = v
-	}
-	if v := os.Getenv("GOCLAW_SANDBOX_SCOPE"); v != "" {
-		ensureSandbox()
-		c.Agents.Defaults.Sandbox.Scope = v
-	}
-	if v := os.Getenv("GOCLAW_SANDBOX_MEMORY_MB"); v != "" {
-		ensureSandbox()
-		if mb, err := strconv.Atoi(v); err == nil && mb > 0 {
-			c.Agents.Defaults.Sandbox.MemoryMB = mb
-		}
-	}
-	if v := os.Getenv("GOCLAW_SANDBOX_CPUS"); v != "" {
-		ensureSandbox()
-		if cpus, err := strconv.ParseFloat(v, 64); err == nil && cpus > 0 {
-			c.Agents.Defaults.Sandbox.CPUs = cpus
-		}
-	}
-	if v := os.Getenv("GOCLAW_SANDBOX_TIMEOUT_SEC"); v != "" {
-		ensureSandbox()
-		if sec, err := strconv.Atoi(v); err == nil && sec > 0 {
-			c.Agents.Defaults.Sandbox.TimeoutSec = sec
-		}
-	}
-	if v := os.Getenv("GOCLAW_SANDBOX_NETWORK"); v != "" {
-		ensureSandbox()
-		c.Agents.Defaults.Sandbox.NetworkEnabled = v == "true" || v == "1"
-	}
-
 	// Browser (for Docker-compose browser sidecar overlay)
 	envStr("GOCLAW_BROWSER_REMOTE_URL", &c.Tools.Browser.RemoteURL)
 	if c.Tools.Browser.RemoteURL != "" {
 		c.Tools.Browser.Enabled = true
 	}
 }
-
 
 // Save writes the config to a JSON file.
 func Save(path string, cfg *Config) error {
@@ -355,9 +309,6 @@ func (c *Config) ResolveAgent(agentID string) AgentDefaults {
 		}
 		if spec.Workspace != "" {
 			d.Workspace = spec.Workspace
-		}
-		if spec.Sandbox != nil {
-			d.Sandbox = spec.Sandbox
 		}
 		if spec.AgentType != "" {
 			d.AgentType = spec.AgentType

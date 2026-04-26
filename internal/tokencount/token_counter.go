@@ -31,8 +31,8 @@ type TokenizerID string
 
 const (
 	TokenizerCL100K   TokenizerID = "cl100k_base" // Claude, GPT-3.5/4
-	TokenizerO200K    TokenizerID = "o200k_base"   // GPT-4o, GPT-5
-	TokenizerFallback TokenizerID = "fallback"      // rune-count / 3
+	TokenizerO200K    TokenizerID = "o200k_base"  // GPT-4o, GPT-5
+	TokenizerFallback TokenizerID = "fallback"    // rune-count / 3
 )
 
 // ModelInfo maps a model name prefix to its tokenizer + context window.

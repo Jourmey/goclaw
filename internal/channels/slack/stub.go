@@ -1,5 +1,7 @@
 // Package slack - removed channel stub
 package slack
 
-// Stub - slack channel removed
-
+// FactoryWithPendingStore stub - slack factory removed
+func FactoryWithPendingStore(msgStore interface{}) interface{} {
+	return nil
+}

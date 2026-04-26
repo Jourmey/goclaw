@@ -11,14 +11,14 @@ import (
 
 func TestValidateDownloadURL_SSRF(t *testing.T) {
 	blocked := []string{
-		"http://github.com/foo",                     // plain HTTP
-		"https://internal.example.com/x",            // not allowlisted
-		"https://github.com.attacker.com/x",         // prefix attack
-		"https://127.0.0.1/metadata",                // literal IP
-		"https://[::1]/x",                           // IPv6 literal
-		"https://169.254.169.254/latest/meta-data",  // cloud metadata
-		"https://metadata.google.internal/x",        // GCP metadata
-		"ftp://github.com/foo",                      // non-HTTPS scheme
+		"http://github.com/foo",                    // plain HTTP
+		"https://internal.example.com/x",           // not allowlisted
+		"https://github.com.attacker.com/x",        // prefix attack
+		"https://127.0.0.1/metadata",               // literal IP
+		"https://[::1]/x",                          // IPv6 literal
+		"https://169.254.169.254/latest/meta-data", // cloud metadata
+		"https://metadata.google.internal/x",       // GCP metadata
+		"ftp://github.com/foo",                     // non-HTTPS scheme
 	}
 	for _, u := range blocked {
 		if err := validateDownloadURL(u); err == nil {

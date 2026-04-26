@@ -26,7 +26,7 @@ func NewPruneStage(deps *PipelineDeps, memFlush *MemoryFlushStage) *PruneStage {
 	return &PruneStage{deps: deps, memoryFlush: memFlush, result: Continue}
 }
 
-func (s *PruneStage) Name() string       { return "prune" }
+func (s *PruneStage) Name() string        { return "prune" }
 func (s *PruneStage) Result() StageResult { return s.result }
 
 // defaultCachePruneTTL is used when cfg.TTL is empty or invalid.

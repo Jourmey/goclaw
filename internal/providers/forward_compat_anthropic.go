@@ -19,8 +19,8 @@ func (r *AnthropicForwardCompat) ResolveForwardCompat(modelID string, registry M
 	}
 
 	prefix := m[1]  // e.g. "claude-opus-4"
-	version := m[2]  // e.g. "7"
-	suffix := m[3]   // e.g. "-20260501" or ""
+	version := m[2] // e.g. "7"
+	suffix := m[3]  // e.g. "-20260501" or ""
 
 	// Try decrementing the version to find a known template
 	ver := 0

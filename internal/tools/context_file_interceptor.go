@@ -23,7 +23,7 @@ var protectedFileSet = map[string]bool{
 	bootstrap.AgentsFile:         true,
 	bootstrap.UserFile:           true,
 	bootstrap.UserPredefinedFile: true,
-	bootstrap.CapabilitiesFile:  true,
+	bootstrap.CapabilitiesFile:   true,
 }
 
 // contextFileSet is the set of filenames routed to the DB store.
@@ -34,9 +34,9 @@ var contextFileSet = map[string]bool{
 	bootstrap.IdentityFile:       true,
 	bootstrap.UserFile:           true,
 	bootstrap.UserPredefinedFile: true,
-	bootstrap.BootstrapFile:      true,       // first-run file (deleted after completion)
-	bootstrap.HeartbeatFile:      true,       // agent-level heartbeat checklist
-	bootstrap.CapabilitiesFile:  true,       // domain expertise (evolvable when self_evolve=true)
+	bootstrap.BootstrapFile:      true, // first-run file (deleted after completion)
+	bootstrap.HeartbeatFile:      true, // agent-level heartbeat checklist
+	bootstrap.CapabilitiesFile:   true, // domain expertise (evolvable when self_evolve=true)
 }
 
 // isContextFile checks if a path refers to a workspace-root context file.
@@ -75,12 +75,12 @@ const defaultContextCacheTTL = 5 * time.Minute
 // Keeps SOUL.md, IDENTITY.md etc. in Postgres.
 // Routes based on agent type: "open" → all per-user, "predefined" → only USER.md per-user.
 type ContextFileInterceptor struct {
-	agentStore       store.AgentStore
-	workspace        string // workspace root for matching absolute paths
-	agentCache       cache.Cache[[]store.AgentContextFileData] // agent-level files, keyed by agentID.String()
-	userCache        cache.Cache[[]store.AgentContextFileData] // user-level files, keyed by "agentID:userID"
-	ttl              time.Duration
-	permStore store.ConfigPermissionStore // nil = no group write restriction
+	agentStore store.AgentStore
+	workspace  string                                    // workspace root for matching absolute paths
+	agentCache cache.Cache[[]store.AgentContextFileData] // agent-level files, keyed by agentID.String()
+	userCache  cache.Cache[[]store.AgentContextFileData] // user-level files, keyed by "agentID:userID"
+	ttl        time.Duration
+	permStore  store.ConfigPermissionStore // nil = no group write restriction
 }
 
 // NewContextFileInterceptor creates an interceptor backed by the given agent store.

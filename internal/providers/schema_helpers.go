@@ -1,8 +1,9 @@
 package providers
 
-import "maps"
-
-import "strings"
+import (
+	"maps"
+	"strings"
+)
 
 // walkSchema applies fn to every nested map in known schema fields
 // (properties, items, additionalProperties, anyOf, oneOf, allOf, not)

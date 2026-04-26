@@ -1,5 +1,11 @@
-// Package knowledgegraph - removed module stub
 package knowledgegraph
 
-// Stub - knowledge graph module removed
+// Stub package - knowledge graph removed
 
+// Extractor stub - knowledge graph extraction removed
+type Extractor struct{}
+
+// NewExtractor stub
+func NewExtractor(provider interface{}, model string, dummy int) *Extractor {
+	return &Extractor{}
+}

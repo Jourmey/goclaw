@@ -15,8 +15,8 @@ import (
 type WriteFileTool struct {
 	workspace       string
 	restrict        bool
-	allowedPrefixes []string                    // extra allowed path prefixes (cross-drive on Windows)
-	deniedPrefixes  []string                    // path prefixes to deny access to (e.g. .goclaw)
+	allowedPrefixes []string // extra allowed path prefixes (cross-drive on Windows)
+	deniedPrefixes  []string // path prefixes to deny access to (e.g. .goclaw)
 	sandboxMgr      sandbox.Manager
 	contextFileIntc *ContextFileInterceptor     // nil = no virtual FS routing
 	memIntc         *MemoryInterceptor          // nil = no memory routing

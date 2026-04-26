@@ -26,10 +26,10 @@ type gatewayDeps struct {
 	channelMgr       *channels.Manager
 	agentRouter      *agent.Router
 	toolsReg         *tools.Registry
-	skillsLoader     *skills.Loader // optional: enables skill creation in evolution approval
+	skillsLoader     *skills.Loader         // optional: enables skill creation in evolution approval
 	permCache        *cache.PermissionCache // nil if no tenant store; closed on shutdown to stop sweep goroutines
-	enrichProgress *vault.EnrichProgress // nil if enrichment worker not registered
-	enrichWorker   *vault.EnrichWorker  // nil if enrichment worker not registered; for stop/enqueue
+	enrichProgress   *vault.EnrichProgress  // nil if enrichment worker not registered
+	enrichWorker     *vault.EnrichWorker    // nil if enrichment worker not registered; for stop/enqueue
 	workspace        string
 	dataDir          string
 	domainBus        eventbus.DomainEventBus

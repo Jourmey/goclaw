@@ -23,7 +23,7 @@ func NewThinkStage(deps *PipelineDeps) *ThinkStage {
 	return &ThinkStage{deps: deps, result: Continue}
 }
 
-func (s *ThinkStage) Name() string       { return "think" }
+func (s *ThinkStage) Name() string        { return "think" }
 func (s *ThinkStage) Result() StageResult { return s.result }
 
 // Execute builds tools, calls LLM, handles truncation, sets flow control.

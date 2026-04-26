@@ -1,5 +1,7 @@
 // Package whatsapp - removed channel stub
 package whatsapp
 
-// Stub - whatsapp channel removed
-
+// FactoryWithDBAudio stub - whatsapp factory removed
+func FactoryWithDBAudio(db interface{}, msgStore interface{}, dialectName string, audioMgr interface{}, toolStore interface{}) interface{} {
+	return nil
+}

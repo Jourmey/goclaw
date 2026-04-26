@@ -348,11 +348,11 @@ func TestIsPathInside_WindowsCaseInsensitive(t *testing.T) {
 		child, parent string
 		want          bool
 	}{
-		{`C:\Workspace\file.txt`, `c:\workspace`, true},       // case mismatch
-		{`c:\workspace\file.txt`, `C:\Workspace`, true},       // reverse case
-		{`C:\WORKSPACE\SUB\FILE`, `c:\workspace`, true},       // all caps child
-		{`D:\other`, `C:\workspace`, false},                   // different drive
-		{`C:\workspaceX\file.txt`, `C:\workspace`, false},     // prefix but not child
+		{`C:\Workspace\file.txt`, `c:\workspace`, true},   // case mismatch
+		{`c:\workspace\file.txt`, `C:\Workspace`, true},   // reverse case
+		{`C:\WORKSPACE\SUB\FILE`, `c:\workspace`, true},   // all caps child
+		{`D:\other`, `C:\workspace`, false},               // different drive
+		{`C:\workspaceX\file.txt`, `C:\workspace`, false}, // prefix but not child
 	}
 	for _, tt := range tests {
 		got := isPathInside(tt.child, tt.parent)

@@ -41,14 +41,14 @@ func (s *stubSkillStore) LoadSkill(_ context.Context, name string) (string, bool
 	return c, ok
 }
 
-func (s *stubSkillStore) LoadForContext(_ context.Context, _ []string) string  { return "" }
-func (s *stubSkillStore) BuildSummary(_ context.Context, _ []string) string    { return "" }
+func (s *stubSkillStore) LoadForContext(_ context.Context, _ []string) string { return "" }
+func (s *stubSkillStore) BuildSummary(_ context.Context, _ []string) string   { return "" }
 func (s *stubSkillStore) FilterSkills(_ context.Context, _ []string) []store.SkillInfo {
 	return nil
 }
-func (s *stubSkillStore) Version() int64  { return s.version }
-func (s *stubSkillStore) BumpVersion()    { s.version++ }
-func (s *stubSkillStore) Dirs() []string  { return nil }
+func (s *stubSkillStore) Version() int64 { return s.version }
+func (s *stubSkillStore) BumpVersion()   { s.version++ }
+func (s *stubSkillStore) Dirs() []string { return nil }
 
 // ---- helpers ----
 

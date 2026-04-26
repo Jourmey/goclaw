@@ -246,7 +246,13 @@ func TestScheduler_DropOldPolicy(t *testing.T) {
 	}, runFn)
 	defer sched.Stop()
 	// Close blockCh before Stop() (LIFO) so goroutines unblock and Stop() doesn't hang.
-	defer func() { select { case <-blockCh: default: close(blockCh) } }()
+	defer func() {
+		select {
+		case <-blockCh:
+		default:
+			close(blockCh)
+		}
+	}()
 
 	ctx := context.Background()
 	session := "agent:default:drop-test"
@@ -328,7 +334,13 @@ func TestScheduler_InterruptMode(t *testing.T) {
 	}, runFn)
 	defer sched.Stop()
 	// Close blockCh before Stop() (LIFO) so goroutines unblock and Stop() doesn't hang.
-	defer func() { select { case <-blockCh: default: close(blockCh) } }()
+	defer func() {
+		select {
+		case <-blockCh:
+		default:
+			close(blockCh)
+		}
+	}()
 
 	ctx := context.Background()
 	session := "agent:default:interrupt-test"

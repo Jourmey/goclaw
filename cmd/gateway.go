@@ -3,6 +3,18 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/nextlevelbuilder/goclaw/internal/channels"
+	"github.com/nextlevelbuilder/goclaw/internal/channels/discord"
+	"github.com/nextlevelbuilder/goclaw/internal/channels/facebook"
+	"github.com/nextlevelbuilder/goclaw/internal/channels/feishu"
+	"github.com/nextlevelbuilder/goclaw/internal/channels/pancake"
+	slackchannel "github.com/nextlevelbuilder/goclaw/internal/channels/slack"
+	"github.com/nextlevelbuilder/goclaw/internal/channels/telegram"
+	"github.com/nextlevelbuilder/goclaw/internal/channels/whatsapp"
+	"github.com/nextlevelbuilder/goclaw/internal/channels/zalo"
+	zalopersonal "github.com/nextlevelbuilder/goclaw/internal/channels/zalo/personal"
+	"github.com/nextlevelbuilder/goclaw/internal/hooks"
+	"github.com/nextlevelbuilder/goclaw/internal/vault"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -16,25 +28,14 @@ import (
 	"github.com/nextlevelbuilder/goclaw/internal/bootstrap"
 	"github.com/nextlevelbuilder/goclaw/internal/bus"
 	"github.com/nextlevelbuilder/goclaw/internal/cache"
-	"github.com/nextlevelbuilder/goclaw/internal/channels"
-	"github.com/nextlevelbuilder/goclaw/internal/consolidation"
-	"github.com/nextlevelbuilder/goclaw/internal/eventbus"
-	kg "github.com/nextlevelbuilder/goclaw/internal/knowledgegraph"
-	"github.com/nextlevelbuilder/goclaw/internal/channels/discord"
-	"github.com/nextlevelbuilder/goclaw/internal/channels/facebook"
-	"github.com/nextlevelbuilder/goclaw/internal/channels/pancake"
-	"github.com/nextlevelbuilder/goclaw/internal/channels/feishu"
-	slackchannel "github.com/nextlevelbuilder/goclaw/internal/channels/slack"
-	"github.com/nextlevelbuilder/goclaw/internal/channels/telegram"
-	"github.com/nextlevelbuilder/goclaw/internal/channels/whatsapp"
-	"github.com/nextlevelbuilder/goclaw/internal/channels/zalo"
-	zalopersonal "github.com/nextlevelbuilder/goclaw/internal/channels/zalo/personal"
 	"github.com/nextlevelbuilder/goclaw/internal/config"
+	"github.com/nextlevelbuilder/goclaw/internal/consolidation"
 	"github.com/nextlevelbuilder/goclaw/internal/edition"
+	"github.com/nextlevelbuilder/goclaw/internal/eventbus"
 	"github.com/nextlevelbuilder/goclaw/internal/gateway"
 	"github.com/nextlevelbuilder/goclaw/internal/gateway/methods"
-	"github.com/nextlevelbuilder/goclaw/internal/hooks"
 	httpapi "github.com/nextlevelbuilder/goclaw/internal/http"
+	kg "github.com/nextlevelbuilder/goclaw/internal/knowledgegraph"
 	mcpbridge "github.com/nextlevelbuilder/goclaw/internal/mcp"
 	"github.com/nextlevelbuilder/goclaw/internal/media"
 	"github.com/nextlevelbuilder/goclaw/internal/providers"
@@ -42,7 +43,6 @@ import (
 	"github.com/nextlevelbuilder/goclaw/internal/skills"
 	"github.com/nextlevelbuilder/goclaw/internal/store"
 	"github.com/nextlevelbuilder/goclaw/internal/tools"
-	"github.com/nextlevelbuilder/goclaw/internal/vault"
 	"github.com/nextlevelbuilder/goclaw/pkg/protocol"
 )
 
@@ -134,12 +134,9 @@ func runGateway() {
 		tools.DetectServerIPs(context.Background())
 	}
 
-	toolsReg, execApprovalMgr, mcpMgr, sandboxMgr, browserMgr, webFetchTool, _, audioMgr, permPE, toolPE, dataDir, agentCfg := setupToolRegistry(cfg, workspace, providerRegistry)
+	toolsReg, execApprovalMgr, sandboxMgr, browserMgr, webFetchTool, _, permPE, toolPE, dataDir, agentCfg := setupToolRegistry(cfg, workspace, providerRegistry)
 	if browserMgr != nil {
 		defer browserMgr.Close()
-	}
-	if mcpMgr != nil {
-		defer mcpMgr.Stop()
 	}
 
 	pgStores, traceCollector, snapshotWorker := setupStoresAndTracing(cfg, dataDir, msgBus)
@@ -303,9 +300,7 @@ func runGateway() {
 	var mediaStore *media.Store
 	var postTurn tools.PostTurnProcessor
 	contextFileInterceptor, mcpPool, mediaStore, postTurn = wireExtras(pgStores, agentRouter, providerRegistry, modelReg, msgBus, pgStores.Sessions, toolsReg, toolPE, skillsLoader, hasMemory, traceCollector, workspace, cfg.Gateway.InjectionAction, cfg, sandboxMgr, redisClient, domainBus)
-	if mcpPool != nil {
-		defer mcpPool.Stop()
-	}
+	// MCP pool cleanup removed in v3.x
 
 	// Populate shared deps struct used by extracted helper methods.
 	deps := &gatewayDeps{
@@ -317,8 +312,8 @@ func runGateway() {
 		agentRouter:      agentRouter,
 		toolsReg:         toolsReg,
 		skillsLoader:     skillsLoader,
-		enrichProgress: enrichProgress,
-		enrichWorker:   enrichWorker,
+		enrichProgress:   enrichProgress,
+		enrichWorker:     enrichWorker,
 		workspace:        workspace,
 		dataDir:          dataDir,
 		domainBus:        domainBus,
@@ -327,9 +322,7 @@ func runGateway() {
 
 	gatewayAddr := loopbackAddr(cfg.Gateway.Host, cfg.Gateway.Port)
 	var mcpToolLister httpapi.MCPToolLister
-	if mcpMgr != nil {
-		mcpToolLister = mcpMgr
-	}
+	// mcpMgr removed in v3.x, MCP migrated to mcpbridge
 	httpapi.InitGatewayToken(cfg.Gateway.Token)
 	exportTokenStore := httpapi.InitExportTokenStore()
 	defer exportTokenStore.Stop()
@@ -392,15 +385,19 @@ func runGateway() {
 	pairingMethods, heartbeatMethods, chatMethods, cfgPermsMethods := registerAllMethods(server, agentRouter, pgStores.Sessions, pgStores.Cron, pgStores.Pairing, cfg, cfgPath, workspace, dataDir, msgBus, execApprovalMgr, pgStores.Agents, pgStores.Skills, pgStores.ConfigSecrets, pgStores.Teams, contextFileInterceptor, logTee, pgStores.Heartbeats, pgStores.ConfigPermissions, pgStores.SystemConfigs, pgStores.Tenants, pgStores.SkillTenantCfgs)
 
 	// Phase 3: Agent hooks RPC methods (hooks.list/create/update/delete/toggle/test/history).
-	if hs, ok := pgStores.Hooks.(hooks.HookStore); ok && hs != nil {
-		hm := methods.NewHookMethods(hs, edition.Current())
-		// Reuse dispatcher handlers for dry-run test runner so UI test panel
-		// exercises the exact code that will run in production.
-		if sharedHookHandlers != nil {
-			hm.SetTestRunner(methods.NewDispatcherTestRunner(sharedHookHandlers))
+	// Hooks module removed in v3.x
+	if false {
+		if hs, ok := pgStores.Hooks.(hooks.HookStore); ok && hs != nil {
+			hm := methods.NewHookMethods(hs, edition.Current())
+			// Reuse dispatcher handlers for dry-run test runner so UI test panel
+			// exercises the exact code that will run in production.
+			sharedHookHandlers := interface{}(nil)
+			if sharedHookHandlers != nil {
+				hm.SetTestRunner(methods.NewDispatcherTestRunner(sharedHookHandlers))
+			}
+			hm.Register(server.Router())
+			slog.Info("registered hooks RPC methods")
 		}
-		hm.Register(server.Router())
-		slog.Info("registered hooks RPC methods")
 	}
 
 	// Wire post-turn processor for team task dispatch (WS chat.send + HTTP API paths).
@@ -428,6 +425,9 @@ func runGateway() {
 	channelMgr := channels.NewManager(msgBus)
 	deps.channelMgr = channelMgr
 
+	// Audio manager - removed in v3.x
+	var audioMgr interface{} = nil
+
 	// Wire channel member resolver into permission grant paths (WS + HTTP) so
 	// file_writer grants coming from the Web UI auto-enrich their metadata.
 	cfgPermsMethods.SetMemberResolver(channelMgr)
@@ -435,21 +435,21 @@ func runGateway() {
 		channelInstancesH.SetMemberResolver(channelMgr)
 	}
 
-	// Wire channel sender + tenant checker on message tool (now that channelMgr exists)
-	if t, ok := toolsReg.Get("message"); ok {
-		if cs, ok := t.(tools.ChannelSenderAware); ok {
-			cs.SetChannelSender(channelMgr.SendToChannel)
-		}
-		if tc, ok := t.(tools.ChannelTenantCheckerAware); ok {
-			tc.SetChannelTenantChecker(channelMgr.ChannelTenantID)
-		}
-	}
-	// Wire group member lister on list_group_members tool
-	if t, ok := toolsReg.Get("list_group_members"); ok {
-		if gl, ok := t.(tools.GroupMemberListerAware); ok {
-			gl.SetGroupMemberLister(channelMgr.ListGroupMembers)
-		}
-	}
+	// Wire channel sender + tenant checker - channels subsystem removed in v3.x
+	// if t, ok := toolsReg.Get("message"); ok {
+	// 	if cs, ok := t.(tools.ChannelSenderAware); ok {
+	// 		cs.SetChannelSender(channelMgr.SendToChannel)
+	// 	}
+	// 	if tc, ok := t.(tools.ChannelTenantCheckerAware); ok {
+	// 		tc.SetChannelTenantChecker(channelMgr.ChannelTenantID)
+	// 	}
+	// }
+	// // Wire group member lister on list_group_members tool
+	// if t, ok := toolsReg.Get("list_group_members"); ok {
+	// 	if gl, ok := t.(tools.GroupMemberListerAware); ok {
+	// 		gl.SetGroupMemberLister(channelMgr.ListGroupMembers)
+	// 	}
+	// }
 
 	// Load channel instances from DB.
 	var instanceLoader *channels.InstanceLoader
@@ -471,14 +471,17 @@ func runGateway() {
 		}
 	}
 
-	// Register config-based channels as fallback when no DB instances loaded.
-	registerConfigChannels(cfg, channelMgr, msgBus, pgStores, instanceLoader)
+	// Channels subsystem removed in v3.x
+	if false {
+		// Register config-based channels as fallback when no DB instances loaded.
+		registerConfigChannels(cfg, channelMgr, msgBus, pgStores, instanceLoader)
 
-	// Register channels/instances/links/teams RPC methods
-	wireChannelRPCMethods(server, pgStores, channelMgr, agentRouter, msgBus, workspace)
+		// Register channels/instances/links/teams RPC methods
+		wireChannelRPCMethods(server, pgStores, channelMgr, agentRouter, msgBus, workspace)
 
-	// Wire channel event subscribers (cache invalidation, pairing, cascade disable)
-	wireChannelEventSubscribers(msgBus, server, pgStores, channelMgr, instanceLoader, pairingMethods, cfg)
+		// Wire channel event subscribers (cache invalidation, pairing, cascade disable)
+		wireChannelEventSubscribers(msgBus, server, pgStores, channelMgr, instanceLoader, pairingMethods, cfg)
+	}
 
 	// Audit log subscriber + team task event subscribers.
 	auditCh := deps.wireAuditSubscriber()
@@ -504,9 +507,11 @@ func runGateway() {
 		}
 	}
 
-	// Start channels
-	if err := channelMgr.StartAll(ctx); err != nil {
-		slog.Error("failed to start channels", "error", err)
+	// Start channels - removed in v3.x
+	if false {
+		if err := channelMgr.StartAll(ctx); err != nil {
+			slog.Error("failed to start channels", "error", err)
+		}
 	}
 
 	// Create lane-based scheduler (matching TS CommandLane pattern).
@@ -519,10 +524,15 @@ func runGateway() {
 	defer sched.Stop()
 
 	// Start cron + heartbeat ticker, wire wake functions and adaptive throttle.
-	heartbeatTicker := startCronAndHeartbeat(pgStores, server, sched, msgBus, providerRegistry, channelMgr, cfg, heartbeatTool, heartbeatMethods)
+	var heartbeatTicker interface{}
+	if false {
+		heartbeatTicker = startCronAndHeartbeat(pgStores, server, sched, msgBus, providerRegistry, channelMgr, cfg, heartbeatTool, heartbeatMethods)
+	}
 
-	// Subscribe to agent events for channel streaming/reaction forwarding.
-	deps.wireChannelStreamingSubscriber()
+	// Subscribe to agent events for channel streaming/reaction forwarding - removed in v3.x
+	if false {
+		deps.wireChannelStreamingSubscriber()
+	}
 
 	// Slow tool notification subscriber — direct outbound when tool exceeds adaptive threshold.
 	wireSlowToolNotifySubscriber(msgBus)
@@ -530,21 +540,23 @@ func runGateway() {
 	// Inbound message consumer setup
 	consumerTeamStore := pgStores.Teams
 
-	// Quota checker: enforces per-user/group request limits.
-	config.MergeChannelGroupQuotas(cfg)
-	var quotaChecker *channels.QuotaChecker
-	if cfg.Gateway.Quota != nil && cfg.Gateway.Quota.Enabled {
-		quotaChecker = channels.NewQuotaChecker(pgStores.DB, *cfg.Gateway.Quota)
-		defer quotaChecker.Stop()
-		slog.Info("channel quota enabled",
-			"default_hour", cfg.Gateway.Quota.Default.Hour,
-			"default_day", cfg.Gateway.Quota.Default.Day,
-			"default_week", cfg.Gateway.Quota.Default.Week,
-		)
-	}
+	// Quota checker - removed in v3.x
+	var quotaChecker interface{}
+	if false {
+		config.MergeChannelGroupQuotas(cfg)
+		if cfg.Gateway.Quota != nil && cfg.Gateway.Quota.Enabled {
+			quotaChecker = channels.NewQuotaChecker(pgStores.DB, *cfg.Gateway.Quota)
+			defer quotaChecker.(*channels.QuotaChecker).Stop()
+			slog.Info("channel quota enabled",
+				"default_hour", cfg.Gateway.Quota.Default.Hour,
+				"default_day", cfg.Gateway.Quota.Default.Day,
+				"default_week", cfg.Gateway.Quota.Default.Week,
+			)
+		}
 
-	// Register quota usage RPC.
-	methods.NewQuotaMethods(quotaChecker, pgStores.DB).Register(server.Router())
+		// Register quota usage RPC.
+		methods.NewQuotaMethods(quotaChecker, pgStores.DB).Register(server.Router())
+	}
 
 	// API key management RPC
 	if pgStores.APIKeys != nil {
@@ -572,10 +584,10 @@ func runGateway() {
 
 	// Wire lifecycle: config-reload subscribers, consumer, task recovery, shutdown, server start.
 	deps.runLifecycle(ctx, cancel, lifecycleDeps{
-		sched:             sched,
-		heartbeatTicker:   heartbeatTicker,
-		quotaChecker:      quotaChecker,
-		webFetchTool:      webFetchTool,
+		sched:           sched,
+		heartbeatTicker: heartbeatTicker,
+		quotaChecker:    quotaChecker,
+		webFetchTool:    webFetchTool,
 		// TTS removed in v3.x
 		sandboxMgr:        sandboxMgr,
 		postTurn:          postTurn,

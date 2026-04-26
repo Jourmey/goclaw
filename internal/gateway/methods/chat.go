@@ -9,12 +9,11 @@ import (
 	"log/slog"
 
 	"github.com/nextlevelbuilder/goclaw/internal/agent"
-	"github.com/nextlevelbuilder/goclaw/internal/audio"
 	"github.com/nextlevelbuilder/goclaw/internal/bus"
-	"github.com/nextlevelbuilder/goclaw/internal/config"
-	httpapi "github.com/nextlevelbuilder/goclaw/internal/http"
 	"github.com/nextlevelbuilder/goclaw/internal/channels/media"
+	"github.com/nextlevelbuilder/goclaw/internal/config"
 	"github.com/nextlevelbuilder/goclaw/internal/gateway"
+	httpapi "github.com/nextlevelbuilder/goclaw/internal/http"
 	"github.com/nextlevelbuilder/goclaw/internal/i18n"
 	"github.com/nextlevelbuilder/goclaw/internal/providers"
 	"github.com/nextlevelbuilder/goclaw/internal/sessions"
@@ -31,7 +30,7 @@ type ChatMethods struct {
 	rateLimiter *gateway.RateLimiter
 	eventBus    bus.EventPublisher
 	postTurn    tools.PostTurnProcessor
-	audioMgr    *audio.Manager // for TTS auto-apply on WS responses (nil = disabled)
+	audioMgr    interface{} // stub - TTS deleted
 }
 
 func NewChatMethods(agents *agent.Router, sess store.SessionStore, cfg *config.Config, rl *gateway.RateLimiter, eventBus bus.EventPublisher) *ChatMethods {
@@ -39,7 +38,8 @@ func NewChatMethods(agents *agent.Router, sess store.SessionStore, cfg *config.C
 }
 
 // SetAudioManager sets the audio manager for TTS auto-apply on WS responses.
-func (m *ChatMethods) SetAudioManager(mgr *audio.Manager) {
+// SetAudioManager removed (TTS deleted)
+func (m *ChatMethods) SetAudioManager(mgr interface{}) {
 	m.audioMgr = mgr
 }
 
@@ -102,11 +102,11 @@ type chatMediaItem struct {
 }
 
 type chatSendParams struct {
-	Message    string            `json:"message"`
-	AgentID    string            `json:"agentId"`
-	SessionKey string            `json:"sessionKey"`
-	Stream     bool              `json:"stream"`
-	Media      json.RawMessage   `json:"media,omitempty"` // []string (legacy) or []chatMediaItem
+	Message    string          `json:"message"`
+	AgentID    string          `json:"agentId"`
+	SessionKey string          `json:"sessionKey"`
+	Stream     bool            `json:"stream"`
+	Media      json.RawMessage `json:"media,omitempty"` // []string (legacy) or []chatMediaItem
 }
 
 // parseMedia handles both legacy string paths and new {path,filename} objects.
@@ -284,8 +284,8 @@ func (m *ChatMethods) handleSend(ctx context.Context, client *gateway.Client, re
 			WorkspaceChatID: userID, // mirror ChatID so vault chat_id isolation activates for WS direct flow
 			RunID:           runID,
 			UserID:          userID,
-			Stream:     params.Stream,
-			InjectCh:   injectCh,
+			Stream:          params.Stream,
+			InjectCh:        injectCh,
 			// Wire trace ID back to the active run so force-abort can mark the
 			// correct trace as cancelled if the goroutine does not exit within 3s.
 			OnTraceCreated: func(traceID uuid.UUID) {
@@ -329,24 +329,11 @@ func (m *ChatMethods) handleSend(ctx context.Context, client *gateway.Client, re
 			}()
 		}
 
-		// TTS auto-apply: convert [[tts]] tagged responses to voice audio
+		// TTS auto-apply disabled (TTS subsystem removed)
 		content := result.Content
 		var ttsAudio *agent.MediaResult
-		if m.audioMgr != nil && content != "" {
-			// For WS, we don't have voice inbound info - use "tagged" mode only
-			ttsResult, _ := m.audioMgr.AutoApplyToText(runCtx, content, "ws", false, "")
-			if ttsResult != nil && ttsResult.AudioPath != "" {
-				// Include audio in media results
-				ttsAudio = &agent.MediaResult{
-					Path:        httpapi.SignMediaPath(ttsResult.AudioPath, httpapi.FileSigningKey()),
-					ContentType: ttsResult.AudioMime,
-					AsVoice:     true,
-				}
-				content = ttsResult.Text // Use stripped text
-			} else if ttsResult != nil {
-				content = ttsResult.Text // Strip directives even if TTS not applied
-			}
-		}
+		// TTS functionality removed - audioMgr stub is nil, skipping conversion
+		_ = m.audioMgr // silence unused variable warning
 
 		resp := map[string]any{
 			"runId":   result.RunID,

@@ -8,11 +8,11 @@ import (
 
 func TestParseGitHubSpec(t *testing.T) {
 	cases := []struct {
-		in     string
-		ok     bool
-		owner  string
-		repo   string
-		tag    string
+		in    string
+		ok    bool
+		owner string
+		repo  string
+		tag   string
 	}{
 		{"github:cli/cli@v2.45.0", true, "cli", "cli", "v2.45.0"},
 		{"github:cli/cli", true, "cli", "cli", ""},

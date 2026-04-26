@@ -233,64 +233,8 @@ func (t *ExecTool) Execute(ctx context.Context, args map[string]any) *Result {
 		return SilentResult(hint)
 	}
 
-	// Credentialed exec: if command matches a configured binary, use Direct Exec Mode.
-	// This bypasses approval (admin trust) and shell (security).
-	if cred, binary, cmdArgs := t.lookupCredentialedBinary(ctx, command); cred != nil {
-		cwd := ToolWorkspaceFromCtx(ctx)
-		if cwd == "" {
-			cwd = t.workspace
-		}
-		if wd, _ := args["working_dir"].(string); wd != "" {
-			if effectiveRestrict(ctx, t.restrict) {
-				if resolved, err := resolvePath(wd, t.workspace, true); err == nil {
-					cwd = resolved
-				}
-			} else {
-				cwd = wd
-			}
-		}
-		sandboxKey := ToolSandboxKeyFromCtx(ctx)
-		return t.executeCredentialed(ctx, cred, binary, cmdArgs, cwd, sandboxKey, command)
-	}
-
-	// Secure CLI gate: registered-but-not-granted binaries MUST NOT fall through
-	// to host exec with parent env. Works on the already-normalized command
-	// (Red Team F6) and unwraps shell wrappers up to depth 3 (Red Team F1).
-	// Fails CLOSED on DB error (Red Team F7).
-	if t.secureCLIStore != nil {
-		candidates, tooDeep := collectGateCandidates(normalizedCommand)
-		if tooDeep {
-			slog.Warn("security.credentialed_binary_wrapper_too_deep",
-				"command", truncateCmd(normalizedCommand, 80),
-				"agent_id", store.AgentIDFromContext(ctx))
-			return ErrorResult("Command nesting too deep (>3 shell wrappers). This looks adversarial; if legitimate, flatten the command.")
-		}
-		for _, c := range candidates {
-			if c.binary == "" {
-				continue
-			}
-			gctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-			registered, rerr := t.secureCLIStore.IsRegisteredBinary(gctx, c.binary)
-			cancel()
-			if rerr != nil {
-				slog.Warn("security.credentialed_binary_gate_error",
-					"binary", c.binary, "error", rerr,
-					"agent_id", store.AgentIDFromContext(ctx))
-				return ErrorResult("Secure CLI gate temporarily unavailable. Retry in a moment.")
-			}
-			if registered {
-				slog.Warn("security.credentialed_binary_denied",
-					"binary", c.binary,
-					"wrapper", c.wrapper,
-					"agent_id", store.AgentIDFromContext(ctx),
-					"tenant_id", store.TenantIDFromContext(ctx),
-					"command_prefix", truncateCmd(normalizedCommand, 80))
-				return ErrorResult(fmt.Sprintf(
-					"Binary %q requires a secure CLI grant. Ask admin to grant access to this agent.",
-					c.binary))
-			}
-		}
-	}
+	// Credentialed exec and Secure CLI gate removed - simplified
+	// (lookupCredentialedBinary, executeCredentialed, collectGateCandidates removed)
 
 	// Exec approval check (matching TS exec-approval.ts pipeline)
 	if t.approvalMgr != nil {

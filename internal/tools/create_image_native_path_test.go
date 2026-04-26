@@ -18,7 +18,7 @@ type nativeImageProvider struct {
 }
 
 func (p *nativeImageProvider) Name() string         { return p.name }
-func (p *nativeImageProvider) DefaultModel() string  { return p.model }
+func (p *nativeImageProvider) DefaultModel() string { return p.model }
 func (p *nativeImageProvider) Chat(_ context.Context, _ providers.ChatRequest) (*providers.ChatResponse, error) {
 	return &providers.ChatResponse{}, nil
 }

@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	githubRepo         = "nextlevelbuilder/goclaw"
-	liteTagPrefix      = "lite-v"
+	githubRepo          = "nextlevelbuilder/goclaw"
+	liteTagPrefix       = "lite-v"
 	updateCheckInterval = 1 * time.Hour
-	maxResponseBody    = 2 << 20 // 2 MB
+	maxResponseBody     = 2 << 20 // 2 MB
 )
 
 // UpdateInfo holds the latest release information from GitHub.

@@ -19,11 +19,11 @@ type promptPreviewSection struct {
 
 // promptPreviewResponse is the API response for system prompt preview.
 type promptPreviewResponse struct {
-	Mode       string                      `json:"mode"`
-	Prompt     string                      `json:"prompt"`
-	TokenCount int                         `json:"token_count"`
-	Sections   []promptPreviewSection      `json:"sections"`
-	Tools      []providers.ToolDefinition  `json:"tools,omitempty"`
+	Mode       string                     `json:"mode"`
+	Prompt     string                     `json:"prompt"`
+	TokenCount int                        `json:"token_count"`
+	Sections   []promptPreviewSection     `json:"sections"`
+	Tools      []providers.ToolDefinition `json:"tools,omitempty"`
 }
 
 // handleSystemPromptPreview renders the actual system prompt for an agent in a given mode.

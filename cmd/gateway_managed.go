@@ -16,14 +16,11 @@ import (
 	"github.com/nextlevelbuilder/goclaw/internal/config"
 	"github.com/nextlevelbuilder/goclaw/internal/edition"
 	"github.com/nextlevelbuilder/goclaw/internal/eventbus"
-	"github.com/nextlevelbuilder/goclaw/internal/hooks"
-	hookbuiltin "github.com/nextlevelbuilder/goclaw/internal/hooks/builtin"
-	"github.com/nextlevelbuilder/goclaw/internal/orchestration"
 	httpapi "github.com/nextlevelbuilder/goclaw/internal/http"
-	kg "github.com/nextlevelbuilder/goclaw/internal/knowledgegraph"
 	mcpbridge "github.com/nextlevelbuilder/goclaw/internal/mcp"
 	"github.com/nextlevelbuilder/goclaw/internal/media"
 	memorypkg "github.com/nextlevelbuilder/goclaw/internal/memory"
+	"github.com/nextlevelbuilder/goclaw/internal/orchestration"
 	"github.com/nextlevelbuilder/goclaw/internal/providers"
 	"github.com/nextlevelbuilder/goclaw/internal/sandbox"
 	"github.com/nextlevelbuilder/goclaw/internal/skills"
@@ -236,10 +233,10 @@ func wireExtras(
 		SystemConfigs:          stores.SystemConfigs,
 		Workspace:              workspace,
 		// TTS removed in v3.x
-		AutoInjector:           autoInjector,
-		EvolutionMetricsStore:  stores.EvolutionMetrics,
-		DomainBus:              domainBus,
-		HookDispatcher:         hookDispatcher,
+		AutoInjector:          autoInjector,
+		EvolutionMetricsStore: stores.EvolutionMetrics,
+		DomainBus:             domainBus,
+		HookDispatcher:        hookDispatcher,
 		OnTextUploaded: func(ctx context.Context, path, content string) {
 			if vaultIntc != nil {
 				vaultIntc.AfterWrite(ctx, path, content)

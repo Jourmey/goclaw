@@ -116,14 +116,14 @@ func TestVaultClassify_DeleteDocLinksByTypes_MultipleTypes(t *testing.T) {
 
 	// Create links with 6 classify types + semantic + wikilink (8 total)
 	linkTypes := []string{
-		"reference",    // classify type 1
-		"depends_on",   // classify type 2
-		"extends",      // classify type 3
-		"related",      // classify type 4
-		"supersedes",   // classify type 5
-		"contradicts",  // classify type 6
-		"semantic",     // legacy auto-classified type
-		"wikilink",     // manual link type
+		"reference",   // classify type 1
+		"depends_on",  // classify type 2
+		"extends",     // classify type 3
+		"related",     // classify type 4
+		"supersedes",  // classify type 5
+		"contradicts", // classify type 6
+		"semantic",    // legacy auto-classified type
+		"wikilink",    // manual link type
 	}
 
 	for i, lt := range linkTypes {
@@ -484,7 +484,7 @@ func TestVaultClassify_DeleteAllClassifyTypesAndSemantic(t *testing.T) {
 
 	// Create links with mix of classify types, semantic, and manual types
 	linkConfigs := []struct {
-		toDocID string
+		toDocID  string
 		linkType string
 	}{
 		{docTarget1.ID, "reference"},

@@ -1,8 +1,9 @@
 package providers
 
-import "slices"
-
-import "strings"
+import (
+	"slices"
+	"strings"
+)
 
 // ReasoningCapability describes the supported reasoning levels for a model.
 // The registry is intentionally narrow: only GPT-5/Codex families we can

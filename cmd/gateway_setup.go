@@ -10,15 +10,13 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/nextlevelbuilder/goclaw/internal/audio"
 	"github.com/nextlevelbuilder/goclaw/internal/bootstrap"
 	"github.com/nextlevelbuilder/goclaw/internal/bus"
 	"github.com/nextlevelbuilder/goclaw/internal/config"
-	mcpbridge "github.com/nextlevelbuilder/goclaw/internal/mcp"
+	"github.com/nextlevelbuilder/goclaw/internal/edition"
 	"github.com/nextlevelbuilder/goclaw/internal/permissions"
 	"github.com/nextlevelbuilder/goclaw/internal/providers"
 	"github.com/nextlevelbuilder/goclaw/internal/sandbox"
-	"github.com/nextlevelbuilder/goclaw/internal/edition"
 	"github.com/nextlevelbuilder/goclaw/internal/skills"
 	"github.com/nextlevelbuilder/goclaw/internal/store"
 	"github.com/nextlevelbuilder/goclaw/internal/store/pg"
@@ -39,12 +37,12 @@ func setupToolRegistry(
 ) (
 	toolsReg *tools.Registry,
 	execApprovalMgr *tools.ExecApprovalManager,
-	mcpMgr *mcpbridge.Manager,
+	// mcpMgr *mcpbridge.Manager, // removed
 	sandboxMgr sandbox.Manager,
 	browserMgr *browser.Manager,
 	webFetchTool *tools.WebFetchTool,
 	ttsTool *tools.TtsTool,
-	audioMgr *audio.Manager,
+	// audioMgr *audio.Manager, // removed
 	permPE *permissions.PolicyEngine,
 	toolPE *tools.PolicyEngine,
 	dataDir string,
@@ -54,40 +52,16 @@ func setupToolRegistry(
 	toolsReg = tools.NewRegistry()
 	agentCfg = cfg.ResolveAgent("default")
 
-	// Sandbox manager (optional — routes tools through Docker containers)
-	if sbCfg := cfg.Agents.Defaults.Sandbox; sbCfg != nil && sbCfg.Mode != "" && sbCfg.Mode != "off" {
-		if err := sandbox.CheckDockerAvailable(context.Background()); err != nil {
-			slog.Warn("sandbox disabled: Docker not available",
-				"configured_mode", sbCfg.Mode,
-				"error", err,
-			)
-		} else {
-			resolved := sbCfg.ToSandboxConfig()
-			sandboxMgr = sandbox.NewDockerManager(resolved)
-			slog.Info("sandbox enabled", "mode", string(resolved.Mode), "image", resolved.Image, "scope", string(resolved.Scope))
-		}
-	}
-
-	// Register file tools + exec tool (with sandbox routing via FsBridge if enabled)
-	if sandboxMgr != nil {
-		toolsReg.Register(tools.NewSandboxedReadFileTool(workspace, agentCfg.RestrictToWorkspace, sandboxMgr))
-		toolsReg.Register(tools.NewSandboxedWriteFileTool(workspace, agentCfg.RestrictToWorkspace, sandboxMgr))
-		toolsReg.Register(tools.NewSandboxedListFilesTool(workspace, agentCfg.RestrictToWorkspace, sandboxMgr))
-		toolsReg.Register(tools.NewSandboxedEditTool(workspace, agentCfg.RestrictToWorkspace, sandboxMgr))
-		toolsReg.Register(tools.NewSandboxedExecTool(workspace, agentCfg.RestrictToWorkspace, sandboxMgr))
-	} else {
-		toolsReg.Register(tools.NewReadFileTool(workspace, agentCfg.RestrictToWorkspace))
-		toolsReg.Register(tools.NewWriteFileTool(workspace, agentCfg.RestrictToWorkspace))
-		toolsReg.Register(tools.NewListFilesTool(workspace, agentCfg.RestrictToWorkspace))
-		toolsReg.Register(tools.NewEditTool(workspace, agentCfg.RestrictToWorkspace))
-		toolsReg.Register(tools.NewExecTool(workspace, agentCfg.RestrictToWorkspace))
-	}
+	toolsReg.Register(tools.NewReadFileTool(workspace, agentCfg.RestrictToWorkspace))
+	toolsReg.Register(tools.NewWriteFileTool(workspace, agentCfg.RestrictToWorkspace))
+	toolsReg.Register(tools.NewListFilesTool(workspace, agentCfg.RestrictToWorkspace))
+	toolsReg.Register(tools.NewEditTool(workspace, agentCfg.RestrictToWorkspace))
+	toolsReg.Register(tools.NewExecTool(workspace, agentCfg.RestrictToWorkspace))
 
 	// Memory tools — PG-backed; always registered (PG memory is always available)
 	toolsReg.Register(tools.NewMemorySearchTool())
 	toolsReg.Register(tools.NewMemoryGetTool())
 	toolsReg.Register(tools.NewMemoryExpandTool())
-	toolsReg.Register(tools.NewKnowledgeGraphSearchTool())
 	slog.Info("memory + knowledge graph tools registered (PG-backed)")
 
 	// Browser automation tool
@@ -131,7 +105,6 @@ func setupToolRegistry(
 
 	// TTS removed in v3.x
 	ttsTool = nil
-	audioMgr = nil
 
 	// Tool rate limiting (per session, sliding window)
 	if cfg.Tools.RateLimitPerHour > 0 {
@@ -145,14 +118,14 @@ func setupToolRegistry(
 		slog.Info("credential scrubbing disabled")
 	}
 
-	// MCP servers (config-based: shared across all agents)
-	if len(cfg.Tools.McpServers) > 0 {
-		mcpMgr = mcpbridge.NewManager(toolsReg, mcpbridge.WithConfigs(cfg.Tools.McpServers))
-		if err := mcpMgr.Start(context.Background()); err != nil {
-			slog.Warn("mcp.startup_errors", "error", err)
-		}
-		slog.Info("MCP servers initialized", "configured", len(cfg.Tools.McpServers), "tools", len(mcpMgr.ToolNames()))
-	}
+	// MCP servers removed
+	// if len(cfg.Tools.McpServers) > 0 {
+	// 	mcpMgr = mcpbridge.NewManager(toolsReg, mcpbridge.WithConfigs(cfg.Tools.McpServers))
+	// 	if err := mcpMgr.Start(context.Background()); err != nil {
+	// 		slog.Warn("mcp.startup_errors", "error", err)
+	// 	}
+	// 	slog.Info("MCP servers initialized", "configured", len(cfg.Tools.McpServers), "tools", len(mcpMgr.ToolNames()))
+	// }
 
 	// Exec approval system — always active (deny patterns + safe bins + configurable ask mode)
 	{
@@ -366,41 +339,6 @@ func setupMemoryEmbeddings(
 				}()
 			}
 
-			// Wire embedding provider into team store for semantic task search.
-			if pgTeamStore, ok := pgStores.Teams.(*pg.PGTeamStore); ok {
-				pgTeamStore.SetEmbeddingProvider(embProvider)
-				go func() {
-					if count, err := pgTeamStore.BackfillTaskEmbeddings(context.Background()); err != nil {
-						slog.Warn("task embeddings backfill failed", "error", err)
-					} else if count > 0 {
-						slog.Info("task embeddings backfill complete", "tasks_updated", count)
-					}
-				}()
-			}
-
-			// Wire embedding provider into KG store for entity semantic search.
-			if pgKG, ok := pgStores.KnowledgeGraph.(*pg.PGKnowledgeGraphStore); ok {
-				pgKG.SetEmbeddingProvider(embProvider)
-				go func() {
-					if count, err := pgKG.BackfillKGEmbeddings(context.Background()); err != nil {
-						slog.Warn("KG embeddings backfill failed", "error", err)
-					} else if count > 0 {
-						slog.Info("KG embeddings backfill complete", "entities_updated", count)
-					}
-				}()
-			}
-
-			// Wire embedding provider into vault store for semantic document search.
-			if pgStores.Vault != nil {
-				pgStores.Vault.SetEmbeddingProvider(embProvider)
-				slog.Info("vault embeddings enabled", "provider", embProvider.Name())
-			}
-
-			// V3: Wire embedding provider into episodic store for semantic search.
-			if pgStores.Episodic != nil {
-				pgStores.Episodic.SetEmbeddingProvider(embProvider)
-				slog.Info("episodic embeddings enabled", "provider", embProvider.Name())
-			}
 		} else {
 			slog.Warn("memory embeddings disabled (no API key), chunks stored without vectors")
 		}
@@ -584,4 +522,3 @@ func setupSkillsSystem(
 
 	return skillsLoader, skillSearchTool, globalSkillsDir, bundledSkillsDir, builtinSkillsDir
 }
-

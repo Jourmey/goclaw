@@ -164,4 +164,3 @@ func (w tracedHandler) Execute(ctx_ctx context.Context, cfg hooks.HookConfig, ev
 	hooks.EmitHookSpan(ctx_ctx, ev.HookEvent, cfg.HandlerType, start, dec, errMsg)
 	return dec, err
 }
-

@@ -199,10 +199,10 @@ func init() {
 		MsgTenantScopeRequired: "此操作需要指定租户范围",
 
 		// TTS / 声音
-		MsgTtsUnknownModel:       "未知的 tts 模型：%s",
-		MsgVoicesListFailed:      "获取声音列表失败：%s",
-		MsgTtsGeminiInvalidVoice: "无效的 Gemini 声音：%s",
-		MsgTtsGeminiSpeakerLimit: "Gemini TTS 最多支持 2 位发言人",
+		MsgTtsUnknownModel:        "未知的 tts 模型：%s",
+		MsgVoicesListFailed:       "获取声音列表失败：%s",
+		MsgTtsGeminiInvalidVoice:  "无效的 Gemini 声音：%s",
+		MsgTtsGeminiSpeakerLimit:  "Gemini TTS 最多支持 2 位发言人",
 		MsgTtsGeminiInvalidModel:  "无效的 Gemini TTS 模型：%s",
 		MsgTtsGeminiTextOnly:      "Gemini 拒绝生成音频。请尝试更简单的文本，不要翻译或添加评论。",
 		MsgTtsParamOutOfRange:     "TTS 参数 %q 的值 %v 超出范围 [%v, %v]",

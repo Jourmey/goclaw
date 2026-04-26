@@ -275,10 +275,10 @@ func TestCronConfig_ToRetryConfig_Custom(t *testing.T) {
 func TestApplySystemConfigs(t *testing.T) {
 	cfg := Default()
 	cfg.ApplySystemConfigs(map[string]string{
-		"agent.default_provider":   "openai",
-		"agent.default_model":      "gpt-4o",
-		"agent.context_window":     "100000",
-		"gateway.rate_limit_rpm":   "60",
+		"agent.default_provider":    "openai",
+		"agent.default_model":       "gpt-4o",
+		"agent.context_window":      "100000",
+		"gateway.rate_limit_rpm":    "60",
 		"gateway.max_message_chars": "50000",
 	})
 

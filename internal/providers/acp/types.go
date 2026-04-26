@@ -107,14 +107,14 @@ type ContentBlock struct {
 type SessionUpdate struct {
 	SessionID  string `json:"sessionId"`
 	StopReason string `json:"stopReason,omitempty"`
-	
+
 	Kind     string          `json:"kind,omitempty"`
 	Message  *MessageUpdate  `json:"message,omitempty"`
 	ToolCall *ToolCallUpdate `json:"toolCall,omitempty"`
 
 	Update struct {
 		SessionUpdate string `json:"sessionUpdate"`
-		
+
 		Content json.RawMessage `json:"content,omitempty"`
 
 		Entries []struct {

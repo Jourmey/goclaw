@@ -11,8 +11,8 @@ type CooldownTracker struct {
 	mu          sync.Mutex
 	entries     map[string]*cooldownEntry
 	maxKeys     int
-	lastCleanup time.Time             // amortize TTL cleanup
-	nowFn       func() time.Time      // for testing; defaults to time.Now
+	lastCleanup time.Time        // amortize TTL cleanup
+	nowFn       func() time.Time // for testing; defaults to time.Now
 }
 
 type cooldownEntry struct {

@@ -17,10 +17,10 @@ const (
 // skip thinking injection to avoid API "model not supported" errors.
 var dashscopeThinkingModels = map[string]bool{
 	// Qwen3.5 series — thinking + vision
-	"qwen3.5-plus":    true,
-	"qwen3.5-turbo":   true,
+	"qwen3.5-plus":  true,
+	"qwen3.5-turbo": true,
 	// Qwen3 hosted
-	"qwen3-max":       true,
+	"qwen3-max": true,
 	// Qwen3 open-weight (available as hosted inference)
 	"qwen3-235b-a22b": true,
 	"qwen3-32b":       true,

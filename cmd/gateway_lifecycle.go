@@ -23,10 +23,10 @@ import (
 
 // lifecycleDeps bundles the extra parameters needed by runLifecycle that are not in gatewayDeps.
 type lifecycleDeps struct {
-	sched             *scheduler.Scheduler
-	heartbeatTicker   *heartbeat.Ticker
-	quotaChecker      *channels.QuotaChecker
-	webFetchTool      *tools.WebFetchTool
+	sched           *scheduler.Scheduler
+	heartbeatTicker interface{} // *heartbeat.Ticker - removed in v3.x
+	quotaChecker    interface{} // *channels.QuotaChecker - removed in v3.x
+	webFetchTool    *tools.WebFetchTool
 	// TTS removed in v3.x
 	sandboxMgr        sandbox.Manager
 	postTurn          tools.PostTurnProcessor

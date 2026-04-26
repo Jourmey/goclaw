@@ -29,8 +29,8 @@ func GenerateTitle(ctx context.Context, provider providers.Provider, model, user
 			// Larger budget: thinking-capable models (Gemini 2.5/3, GPT-5 reasoning)
 			// can consume output tokens on reasoning traces. 256 leaves room for a
 			// 15-word title even when the provider allocates some budget to thinking.
-			providers.OptMaxTokens:     256,
-			providers.OptTemperature:   0.3,
+			providers.OptMaxTokens:   256,
+			providers.OptTemperature: 0.3,
 			// Disable extended thinking for title generation — it's a trivial task
 			// that doesn't benefit from reasoning and defaults (esp. Gemini's "high")
 			// otherwise eat the entire max_tokens budget, truncating the title to 1 word.

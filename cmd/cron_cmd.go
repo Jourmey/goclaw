@@ -152,13 +152,13 @@ func printCronJobs(jobs []store.CronJob, jsonOutput bool) {
 			lastRun = time.UnixMilli(*j.State.LastRunAtMS).Format(time.DateTime)
 		}
 
-		idShort := j.ID
-		if len(idShort) > 8 {
-			idShort = idShort[:8]
+		idShortStr := j.ID.String()
+		if len(idShortStr) > 8 {
+			idShortStr = idShortStr[:8]
 		}
 
 		fmt.Fprintf(tw, "%s\t%s\t%v\t%s\t%s\n",
-			idShort, j.Name, j.Enabled, schedule, lastRun)
+			idShortStr, j.Name, j.Enabled, schedule, lastRun)
 	}
 	tw.Flush()
 }

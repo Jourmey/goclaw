@@ -66,7 +66,7 @@ func (s *stubAgentStore) GetByIDs(_ context.Context, _ []uuid.UUID) ([]store.Age
 	return nil, nil
 }
 func (s *stubAgentStore) GetDefault(_ context.Context) (*store.AgentData, error)        { return nil, nil }
-func (s *stubAgentStore) ResetStuckSummoning(_ context.Context) (int64, error)           { return 0, nil }
+func (s *stubAgentStore) ResetStuckSummoning(_ context.Context) (int64, error)          { return 0, nil }
 func (s *stubAgentStore) Update(_ context.Context, _ uuid.UUID, _ map[string]any) error { return nil }
 func (s *stubAgentStore) Delete(_ context.Context, _ uuid.UUID) error                   { return nil }
 func (s *stubAgentStore) List(_ context.Context, _ string) ([]store.AgentData, error) {
@@ -104,6 +104,7 @@ func (s *stubAgentStore) EnsureUserProfile(_ context.Context, _ uuid.UUID, _ str
 func (s *stubAgentStore) PropagateContextFile(_ context.Context, _ uuid.UUID, _ string) (int, error) {
 	return 0, nil
 }
+
 // ---- Tests ----
 
 // TestInterceptor_CacheHit verifies that a second read does NOT call GetAgentContextFiles again.

@@ -49,8 +49,6 @@ _(First contact via %s channel. Profile info auto-filled from channel data.)_
 `, name, name, tz, meta.ChannelType)
 }
 
-
-
 // retryOnBusy retries fn up to 3 times on SQLITE_BUSY errors with 500ms delay.
 func retryOnBusy(fn func() error) error {
 	var lastErr error

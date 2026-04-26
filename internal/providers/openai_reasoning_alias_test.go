@@ -133,9 +133,9 @@ func TestParseResponse_ReasoningCoalesce(t *testing.T) {
 	p := NewOpenAIProvider("test", "key", "https://api.openai.com/v1", "gpt-4")
 
 	tests := []struct {
-		name          string
-		msg           openAIMessage
-		wantThinking  string
+		name         string
+		msg          openAIMessage
+		wantThinking string
 	}{
 		{
 			name:         "reasoning_content wins",

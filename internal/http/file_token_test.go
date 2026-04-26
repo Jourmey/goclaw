@@ -9,9 +9,9 @@ func TestSignMediaPath(t *testing.T) {
 	secret := "test-secret-key"
 
 	tests := []struct {
-		name     string
-		rawPath  string
-		wantBase string // expected URL path prefix (before ?ft=)
+		name      string
+		rawPath   string
+		wantBase  string // expected URL path prefix (before ?ft=)
 		wantEmpty bool
 	}{
 		{

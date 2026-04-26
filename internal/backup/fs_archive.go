@@ -65,10 +65,10 @@ func ArchiveDirectory(tw *tar.Writer, srcDir, tarPrefix string, skipFn func(stri
 		tarPath := tarPrefix + "/" + filepath.ToSlash(rel)
 
 		hdr := &tar.Header{
-			Name:    tarPath,
-			Mode:    int64(info.Mode()),
-			Size:    info.Size(),
-			ModTime: info.ModTime(),
+			Name:     tarPath,
+			Mode:     int64(info.Mode()),
+			Size:     info.Size(),
+			ModTime:  info.ModTime(),
 			Typeflag: tar.TypeReg,
 		}
 		if err := tw.WriteHeader(hdr); err != nil {

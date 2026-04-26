@@ -18,11 +18,11 @@ type stubExecutor struct{}
 func (s *stubExecutor) ExecuteWithContext(_ context.Context, _ string, _ map[string]any, _, _, _, _ string, _ tools.AsyncCallback) *tools.Result {
 	return &tools.Result{ForLLM: "ok", IsError: false}
 }
-func (s *stubExecutor) TryActivateDeferred(string) bool         { return false }
+func (s *stubExecutor) TryActivateDeferred(string) bool          { return false }
 func (s *stubExecutor) ProviderDefs() []providers.ToolDefinition { return nil }
-func (s *stubExecutor) Get(string) (tools.Tool, bool)             { return nil, false }
-func (s *stubExecutor) List() []string                            { return nil }
-func (s *stubExecutor) Aliases() map[string]string                { return nil }
+func (s *stubExecutor) Get(string) (tools.Tool, bool)            { return nil, false }
+func (s *stubExecutor) List() []string                           { return nil }
+func (s *stubExecutor) Aliases() map[string]string               { return nil }
 
 // eventCollector buffers AgentEvents for inspection in tests.
 // Safe for concurrent appends from parallel goroutines.

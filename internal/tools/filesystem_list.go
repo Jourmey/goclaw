@@ -156,7 +156,12 @@ func (t *ListFilesTool) executeInSandbox(ctx context.Context, path, sandboxKey s
 		return ErrorResult(fmt.Sprintf("failed to list directory: %v", err) + MaybeFsBridgeHint(err))
 	}
 
-	return SilentResult(output)
+	// Format output from ListDir (returns []string)
+	var sb strings.Builder
+	for _, name := range output {
+		fmt.Fprintf(&sb, "%s\n", name)
+	}
+	return SilentResult(sb.String())
 }
 
 func (t *ListFilesTool) getFsBridge(ctx context.Context, sandboxKey string) (*sandbox.FsBridge, error) {

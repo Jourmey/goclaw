@@ -279,7 +279,7 @@ func TestIsValidDepName(t *testing.T) {
 		{"npm", "@scope/pkg-name", true},
 		{"npm", "lodash.debounce", true},
 		{"npm", "", false},
-		{"npm", "Upper", false}, // npm pkgs are lowercase
+		{"npm", "Upper", false},                                   // npm pkgs are lowercase
 		{"npm", "a');require('child_process').exec('evil", false}, // C2 injection
 		{"npm", "a';b('", false},
 
@@ -288,11 +288,11 @@ func TestIsValidDepName(t *testing.T) {
 		{"system", "gcc-13", true},
 		{"system", "lib_foo+bar.1", true},
 		{"system", "", false},
-		{"system", "rm -rf /", false},   // space
-		{"system", "foo;bar", false},    // semicolon
-		{"system", "$(evil)", false},    // command substitution
-		{"system", "`bad`", false},      // backtick
-		{"system", "a|b", false},        // pipe
+		{"system", "rm -rf /", false}, // space
+		{"system", "foo;bar", false},  // semicolon
+		{"system", "$(evil)", false},  // command substitution
+		{"system", "`bad`", false},    // backtick
+		{"system", "a|b", false},      // pipe
 
 		// github — opaque spec, validated downstream
 		{"github", "anything/goes@v1", true},
@@ -319,9 +319,9 @@ func TestApplyManifestOverride_DropsInjection(t *testing.T) {
 		"npm:typescript",
 		"system:rm -rf /",
 		"system:ffmpeg",
-		"pip:",             // empty spec
-		"pip:>=1.0",        // version only, no name
-		"pip:[binary]",     // extras only, no name
+		"pip:",         // empty spec
+		"pip:>=1.0",    // version only, no name
+		"pip:[binary]", // extras only, no name
 	}
 	got := applyManifestOverride(scan, malicious, nil)
 	if !got.FromManifest {

@@ -263,10 +263,10 @@ func TestCloneFromTemplatePatchBooleanFields(t *testing.T) {
 	registry := &InMemoryRegistry{}
 
 	template := ModelSpec{
-		ID:       "base",
-		Provider: "openai",
+		ID:        "base",
+		Provider:  "openai",
 		Reasoning: false,
-		Vision:   false,
+		Vision:    false,
 	}
 	registry.Register(template)
 
@@ -462,8 +462,8 @@ func TestCloneFromTemplatePatchZeroValuesIgnored(t *testing.T) {
 
 	// Patch with zero values should be ignored
 	patch := &ModelSpec{
-		ContextWindow: 0, // Should be ignored
-		MaxTokens:     0, // Should be ignored
+		ContextWindow: 0,  // Should be ignored
+		MaxTokens:     0,  // Should be ignored
 		TokenizerID:   "", // Should be ignored
 		Cost: ModelCost{
 			InputPer1M: 0, // Should be ignored

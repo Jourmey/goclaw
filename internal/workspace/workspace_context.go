@@ -10,9 +10,9 @@ import "context"
 type Scope string
 
 const (
-	ScopePersonal Scope = "personal"  // single user, isolated
-	ScopeTeam     Scope = "team"      // team context, shared or isolated
-	ScopeDelegate Scope = "delegate"  // delegated task, scoped access
+	ScopePersonal Scope = "personal" // single user, isolated
+	ScopeTeam     Scope = "team"     // team context, shared or isolated
+	ScopeDelegate Scope = "delegate" // delegated task, scoped access
 )
 
 // WorkspaceContext is resolved ONCE at run start, immutable for the entire run.
@@ -56,17 +56,17 @@ type Resolver interface {
 
 // ResolveParams captures all inputs needed to determine workspace.
 type ResolveParams struct {
-	AgentID    string
-	AgentType  string // "open" | "predefined"
-	UserID     string
-	ChatID     string
-	TenantID   string
-	TenantSlug string // human-readable tenant name for path composition
-	PeerKind   string // "direct" | "group"
-	TeamID     *string
-	TeamConfig *TeamWorkspaceConfig
+	AgentID     string
+	AgentType   string // "open" | "predefined"
+	UserID      string
+	ChatID      string
+	TenantID    string
+	TenantSlug  string // human-readable tenant name for path composition
+	PeerKind    string // "direct" | "group"
+	TeamID      *string
+	TeamConfig  *TeamWorkspaceConfig
 	DelegateCtx *DelegateContext
-	BaseDir    string
+	BaseDir     string
 }
 
 // TeamWorkspaceConfig maps to team.settings JSON.

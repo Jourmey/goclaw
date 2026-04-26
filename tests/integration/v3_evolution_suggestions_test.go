@@ -100,7 +100,7 @@ func TestV3EvolutionSuggestions_TenantIsolation(t *testing.T) {
 	sg := store.EvolutionSuggestion{
 		ID: uuid.New(), TenantID: tenantA, AgentID: agentA,
 		SuggestionType: store.SuggestToolOrder,
-		Suggestion: "test", Rationale: "test", Status: "pending",
+		Suggestion:     "test", Rationale: "test", Status: "pending",
 	}
 	ss.CreateSuggestion(ctxA, sg)
 

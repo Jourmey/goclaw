@@ -317,8 +317,8 @@ func TestValidateChannelTenant(t *testing.T) {
 
 	// Wire a mock checker.
 	channels := map[string]uuid.UUID{
-		"telegram":       tenantA,
-		"tenant-b-tg":   tenantB,
+		"telegram":    tenantA,
+		"tenant-b-tg": tenantB,
 	}
 	tool.SetChannelTenantChecker(func(name string) (uuid.UUID, bool) {
 		tid, ok := channels[name]

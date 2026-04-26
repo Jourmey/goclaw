@@ -50,7 +50,7 @@ type AnthropicProvider struct {
 	client       *http.Client
 	retryConfig  RetryConfig
 	middlewares  RequestMiddleware // composed middleware chain (nil = no-op)
-	registry     ModelRegistry    // model resolution registry (nil = skip)
+	registry     ModelRegistry     // model resolution registry (nil = skip)
 }
 
 // NewAnthropicProvider creates a new Anthropic provider.

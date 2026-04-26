@@ -15,10 +15,10 @@ func TestBuildSystemPrompt_BootstrapStates(t *testing.T) {
 	populatedUserMD := "# USER.md\n\n- **Name:** Alice\n- **Language:** English\n- **Timezone:** UTC+7\n"
 
 	tests := []struct {
-		name       string
-		cfg        SystemPromptConfig
-		wantIn     string // substring that MUST appear
-		wantNotIn  string // substring that MUST NOT appear (empty = skip check)
+		name      string
+		cfg       SystemPromptConfig
+		wantIn    string // substring that MUST appear
+		wantNotIn string // substring that MUST NOT appear (empty = skip check)
 	}{
 		{
 			name: "open agent with BOOTSTRAP.md → FIRST RUN slim mode",
@@ -142,10 +142,10 @@ func TestBuildSystemPrompt_PredefinedBootstrapSoftened(t *testing.T) {
 	}
 
 	tests := []struct {
-		name       string
-		cfg        SystemPromptConfig
-		wantIn     []string
-		wantNotIn  []string
+		name      string
+		cfg       SystemPromptConfig
+		wantIn    []string
+		wantNotIn []string
 	}{
 		{
 			name: "A: ws channel uses softened copy",

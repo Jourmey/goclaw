@@ -21,8 +21,8 @@ func TestFormatBytes(t *testing.T) {
 		{"340 MB", 340 * (1 << 20), "340.0 MB"},
 		{"1 GB", 1 << 30, "1.0 GB"},
 		{"15 GB", 15 * (1 << 30), "15.0 GB"},
-		{"1.5 MB (computed)", 1572864, "1.5 MB"},     // 1.5 * 1048576
-		{"2.3 GB (computed)", 2469493248, "2.3 GB"},  // 2.3 * 1073741824
+		{"1.5 MB (computed)", 1572864, "1.5 MB"},    // 1.5 * 1048576
+		{"2.3 GB (computed)", 2469493248, "2.3 GB"}, // 2.3 * 1073741824
 	}
 
 	for _, tc := range tests {
@@ -245,12 +245,12 @@ func TestFormatBytes_EdgeCases(t *testing.T) {
 		b int64
 		// Just verify it doesn't panic and returns a string
 	}{
-		{1 << 30},       // 1 GB exact
-		{1<<30 - 1},     // Just below 1 GB
-		{1<<30 + 1},     // Just above 1 GB
-		{1 << 40},       // 1 TB (should still use GB)
-		{-1},            // Negative (edge case)
-		{1<<63 - 1},     // Max int64
+		{1 << 30},   // 1 GB exact
+		{1<<30 - 1}, // Just below 1 GB
+		{1<<30 + 1}, // Just above 1 GB
+		{1 << 40},   // 1 TB (should still use GB)
+		{-1},        // Negative (edge case)
+		{1<<63 - 1}, // Max int64
 	}
 
 	for _, tc := range tests {

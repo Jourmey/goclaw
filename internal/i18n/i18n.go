@@ -2,9 +2,10 @@
 // user-facing error messages. Messages use fmt.Sprintf-style templates.
 package i18n
 
-import "maps"
-
-import "fmt"
+import (
+	"fmt"
+	"maps"
+)
 
 // Supported locales.
 const (

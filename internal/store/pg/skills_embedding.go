@@ -64,7 +64,6 @@ func (s *PGSkillStore) SearchByEmbedding(ctx context.Context, embedding []float3
 	return results, nil
 }
 
-
 func buildSkillEmbeddingTenantCond(scope string) string {
 	if scope == "" {
 		return ""

@@ -15,9 +15,8 @@ import (
 	"github.com/nextlevelbuilder/goclaw/internal/config"
 	"github.com/nextlevelbuilder/goclaw/internal/eventbus"
 	"github.com/nextlevelbuilder/goclaw/internal/hooks"
-	"github.com/nextlevelbuilder/goclaw/internal/memory"
-	mcpbridge "github.com/nextlevelbuilder/goclaw/internal/mcp"
 	"github.com/nextlevelbuilder/goclaw/internal/media"
+	"github.com/nextlevelbuilder/goclaw/internal/memory"
 	"github.com/nextlevelbuilder/goclaw/internal/providerresolve"
 	"github.com/nextlevelbuilder/goclaw/internal/providers"
 	"github.com/nextlevelbuilder/goclaw/internal/sandbox"
@@ -73,15 +72,6 @@ type ResolverDeps struct {
 
 	// Builtin tool settings
 	BuiltinToolStore store.BuiltinToolStore
-
-	// MCP server store — for per-agent MCP tool loading
-	MCPStore store.MCPServerStore
-
-	// Shared MCP connection pool — eliminates duplicate connections across agents
-	MCPPool *mcpbridge.Pool
-
-	// MCP grant checker — for runtime grant verification at BridgeTool.Execute
-	MCPGrantChecker mcpbridge.GrantChecker
 
 	// Skill access store — for per-agent skill visibility filtering
 	SkillAccessStore store.SkillAccessStore
@@ -255,8 +245,8 @@ func NewManagedResolver(deps ResolverDeps) ResolverFunc {
 		var sandboxCfgOverride *sandbox.Config
 		if c := ag.ParseSandboxConfig(); c != nil {
 			resolved := c.ToSandboxConfig()
-			sandboxContainerDir = resolved.ContainerWorkdir()
-			sandboxWorkspaceAccess = string(resolved.WorkspaceAccess)
+			sandboxContainerDir = resolved.ContainerWorkdir
+			sandboxWorkspaceAccess = string(resolved.Scope)
 			sandboxCfgOverride = &resolved
 		}
 
@@ -291,57 +281,6 @@ func NewManagedResolver(deps ResolverDeps) ResolverFunc {
 		}
 
 		toolsReg := deps.Tools
-
-		// Per-agent MCP servers: connect to granted MCP servers and register their tools.
-		// Uses a per-agent MCP Manager that queries the MCPServerStore for accessible servers.
-		//
-		// IMPORTANT: Always clone the registry before MCP registration to prevent
-		// cross-agent tool leaks. Without cloning, MCP BridgeTools registered for
-		// one agent pollute the shared deps. Tools and become visible to ALL agents
-		// (even those without MCP grants), because FilterTools reads from registry.List().
-		hasMCPTools := false
-		var mcpUserCredSrvs []store.MCPAccessInfo
-		if deps.MCPStore != nil {
-			if toolsReg == deps.Tools {
-				toolsReg = deps.Tools.Clone()
-			}
-			var mcpOpts []mcpbridge.ManagerOption
-			mcpOpts = append(mcpOpts, mcpbridge.WithStore(deps.MCPStore))
-			if deps.MCPPool != nil {
-				mcpOpts = append(mcpOpts, mcpbridge.WithPool(deps.MCPPool))
-			}
-			if deps.MCPGrantChecker != nil {
-				mcpOpts = append(mcpOpts, mcpbridge.WithGrantChecker(deps.MCPGrantChecker))
-			}
-			mcpMgr := mcpbridge.NewManager(toolsReg, mcpOpts...)
-			if err := mcpMgr.LoadForAgent(ctx, ag.ID, ""); err != nil {
-				slog.Warn("failed to load MCP servers for agent", "agent", agentKey, "error", err)
-			} else {
-				mcpUserCredSrvs = mcpMgr.UserCredServers()
-				// User-credential servers (Notion, etc.) are deferred at startup
-				// but will produce tools per-request via getUserMCPTools.
-				// Set flag so agentToolPolicyWithMCP injects "group:mcp" into alsoAllow.
-				if len(mcpUserCredSrvs) > 0 {
-					hasMCPTools = true
-				}
-				if mcpMgr.IsSearchMode() {
-					// Search mode: too many tools — register mcp_tool_search meta-tool.
-					// Also wire lazy activator so deferred tools can be called by name directly.
-					toolsReg.SetDeferredActivator(mcpMgr.ActivateToolIfDeferred)
-					searchTool := mcpbridge.NewMCPToolSearchTool(mcpMgr)
-					toolsReg.Register(searchTool)
-					hasMCPTools = true
-					slog.Info("mcp.agent.search_mode", "agent", agentKey,
-						"deferred_tools", len(mcpMgr.DeferredToolInfos()))
-				} else {
-					toolNames := mcpMgr.ToolNames()
-					if len(toolNames) > 0 {
-						hasMCPTools = true
-						slog.Info("mcp.agent.tools_loaded", "agent", agentKey, "tools", len(toolNames))
-					}
-				}
-			}
-		}
 
 		// Per-agent memory: enabled if global memory manager exists AND
 		// per-agent config doesn't explicitly disable it.
@@ -467,7 +406,7 @@ func NewManagedResolver(deps ResolverDeps) ResolverFunc {
 			AgentOtherConfig:       ag.OtherConfig,
 			AgentType:              ag.AgentType,
 			IsTeamLead:             isTeamLead,
-			AutoInjector:          deps.AutoInjector,
+			AutoInjector:           deps.AutoInjector,
 			Provider:               provider,
 			Model:                  ag.Model,
 			ModelRegistry:          deps.ModelRegistry,
@@ -486,7 +425,7 @@ func NewManagedResolver(deps ResolverDeps) ResolverFunc {
 			Sessions:               deps.Sessions,
 			Tools:                  toolsReg,
 			ToolPolicy:             deps.ToolPolicy,
-			AgentToolPolicy:        agentToolPolicyForTeam(agentToolPolicyWithWorkspace(agentToolPolicyWithMCP(ag.ParseToolsConfig(), hasMCPTools), hasTeam), isTeamLead),
+			AgentToolPolicy:        agentToolPolicyForTeam(agentToolPolicyWithWorkspace(ag.ParseToolsConfig(), hasTeam), isTeamLead),
 			SkillsLoader:           deps.Skills,
 			SkillAllowList:         skillAllowList,
 			HasMemory:              hasMemory,
@@ -529,10 +468,6 @@ func NewManagedResolver(deps ResolverDeps) ResolverFunc {
 			BudgetMonthlyCents:     derefInt(ag.BudgetMonthlyCents),
 			TracingStore:           deps.TracingStore,
 			MemoryStore:            deps.MemoryStore,
-			MCPStore:               deps.MCPStore,
-			MCPPool:                deps.MCPPool,
-			MCPUserCredSrvs:        mcpUserCredSrvs,
-			MCPGrantChecker:        deps.MCPGrantChecker,
 			OrchMode:               orchMode,
 			DelegateTargets:        delegateTargets,
 			EvolutionMetricsStore:  evoMetricsStore,

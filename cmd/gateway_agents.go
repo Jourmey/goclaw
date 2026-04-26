@@ -240,4 +240,3 @@ func buildSubagentToolsRegistry(
 	}
 	return reg, execTool
 }
-

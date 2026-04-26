@@ -71,8 +71,8 @@ func writeZip(t *testing.T, entries map[string]string) string {
 
 func TestExtractTarGz_HappyPath(t *testing.T) {
 	path := writeTarGz(t, map[string]string{
-		"lazygit":  "ELF\x7fhello",
-		"LICENSE":  "MIT",
+		"lazygit":   "ELF\x7fhello",
+		"LICENSE":   "MIT",
 		"README.md": "readme",
 	})
 	files, err := ExtractArchive(path, 10*1024*1024)
@@ -102,8 +102,8 @@ func TestExtractTarGz_HappyPath(t *testing.T) {
 
 func TestExtractZip_HappyPath(t *testing.T) {
 	path := writeZip(t, map[string]string{
-		"rg":      "binary-content",
-		"doc.md":  "doc",
+		"rg":     "binary-content",
+		"doc.md": "doc",
 	})
 	files, err := ExtractArchive(path, 1024*1024)
 	if err != nil {
@@ -188,12 +188,12 @@ func TestExtractZip_ZipBomb(t *testing.T) {
 
 func TestValidateELF_NonELFRejected(t *testing.T) {
 	vectors := map[string][]byte{
-		"PDF":        []byte("%PDF-1.4\n"),
-		"shell":      []byte("#!/bin/bash\necho hi\n"),
-		"PE":         []byte("MZ\x90\x00"),
-		"machO":      {0xcf, 0xfa, 0xed, 0xfe, 0x07, 0x00, 0x00, 0x01},
-		"truncated":  {0x7f, 0x45, 0x4c},
-		"empty":      {},
+		"PDF":       []byte("%PDF-1.4\n"),
+		"shell":     []byte("#!/bin/bash\necho hi\n"),
+		"PE":        []byte("MZ\x90\x00"),
+		"machO":     {0xcf, 0xfa, 0xed, 0xfe, 0x07, 0x00, 0x00, 0x01},
+		"truncated": {0x7f, 0x45, 0x4c},
+		"empty":     {},
 	}
 	for name, v := range vectors {
 		if err := validateELF(v); err == nil {

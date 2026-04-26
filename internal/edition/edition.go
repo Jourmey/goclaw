@@ -16,8 +16,8 @@ type Edition struct {
 	MaxSubagentDepth      int            `json:"max_subagent_depth"`      // 0 = use config default
 	KGEnabled             bool           `json:"kg_enabled"`
 	RBACEnabled           bool           `json:"rbac_enabled"`
-	TeamFullMode          bool           `json:"team_full_mode"`          // false = lite task actions only
-	VectorSearch          bool           `json:"vector_search"`           // false = FTS5 only
+	TeamFullMode          bool           `json:"team_full_mode"` // false = lite task actions only
+	VectorSearch          bool           `json:"vector_search"`  // false = FTS5 only
 }
 
 // --- Presets ---

@@ -512,8 +512,8 @@ func TestApplyStrictMode_SkipsAnthropic(t *testing.T) {
 	schema := map[string]any{
 		"type": "object",
 		"properties": map[string]any{
-			"url":    map[string]any{"type": "string"},
-			"debug":  map[string]any{"type": "boolean"},
+			"url":   map[string]any{"type": "string"},
+			"debug": map[string]any{"type": "boolean"},
 		},
 		"required": []any{"url"},
 	}

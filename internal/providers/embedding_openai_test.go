@@ -565,8 +565,8 @@ func TestOpenAIEmbedding_RequestBody(t *testing.T) {
 // TestOpenAIEmbedding_BatchBoundary tests batch boundary conditions
 func TestOpenAIEmbedding_BatchBoundary(t *testing.T) {
 	tests := []struct {
-		name         string
-		inputCount   int
+		name          string
+		inputCount    int
 		expectedCalls int
 	}{
 		{"single", 1, 1},

@@ -117,6 +117,14 @@ type ChannelAware interface {
 	RequiredChannelTypes() []string
 }
 
+// GroupMemberLister lists members of a group in a channel.
+type GroupMemberLister func(ctx context.Context, channel, groupID string) (interface{}, error)
+
+// GroupMemberListerAware tools can receive a group member lister function.
+type GroupMemberListerAware interface {
+	SetGroupMemberLister(GroupMemberLister)
+}
+
 // ToProviderDef converts a Tool to a providers.ToolDefinition for LLM APIs.
 func ToProviderDef(t Tool) providers.ToolDefinition {
 	return providers.ToolDefinition{

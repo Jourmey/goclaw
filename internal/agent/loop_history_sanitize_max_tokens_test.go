@@ -24,29 +24,29 @@ type nopSessionStore struct {
 func (n *nopSessionStore) GetOrCreate(_ context.Context, _ string) *store.SessionData {
 	return &store.SessionData{}
 }
-func (n *nopSessionStore) Get(_ context.Context, _ string) *store.SessionData { return nil }
+func (n *nopSessionStore) Get(_ context.Context, _ string) *store.SessionData          { return nil }
 func (n *nopSessionStore) AddMessage(_ context.Context, _ string, _ providers.Message) {}
 func (n *nopSessionStore) GetHistory(_ context.Context, _ string) []providers.Message {
 	return n.history
 }
-func (n *nopSessionStore) GetSummary(_ context.Context, _ string) string   { return "" }
-func (n *nopSessionStore) SetSummary(_ context.Context, _, _ string)       {}
-func (n *nopSessionStore) GetLabel(_ context.Context, _ string) string     { return "" }
-func (n *nopSessionStore) SetLabel(_ context.Context, _, _ string)         {}
+func (n *nopSessionStore) GetSummary(_ context.Context, _ string) string                   { return "" }
+func (n *nopSessionStore) SetSummary(_ context.Context, _, _ string)                       {}
+func (n *nopSessionStore) GetLabel(_ context.Context, _ string) string                     { return "" }
+func (n *nopSessionStore) SetLabel(_ context.Context, _, _ string)                         {}
 func (n *nopSessionStore) SetAgentInfo(_ context.Context, _ string, _ uuid.UUID, _ string) {}
-func (n *nopSessionStore) TruncateHistory(_ context.Context, _ string, _ int) {}
-func (n *nopSessionStore) SetHistory(_ context.Context, _ string, _ []providers.Message) {}
-func (n *nopSessionStore) Reset(_ context.Context, _ string)               {}
-func (n *nopSessionStore) Delete(_ context.Context, _ string) error        { return nil }
-func (n *nopSessionStore) Save(_ context.Context, _ string) error          { return nil }
+func (n *nopSessionStore) TruncateHistory(_ context.Context, _ string, _ int)              {}
+func (n *nopSessionStore) SetHistory(_ context.Context, _ string, _ []providers.Message)   {}
+func (n *nopSessionStore) Reset(_ context.Context, _ string)                               {}
+func (n *nopSessionStore) Delete(_ context.Context, _ string) error                        { return nil }
+func (n *nopSessionStore) Save(_ context.Context, _ string) error                          { return nil }
 
 // SessionMetadataStore methods
-func (n *nopSessionStore) UpdateMetadata(_ context.Context, _, _, _, _ string)      {}
-func (n *nopSessionStore) AccumulateTokens(_ context.Context, _ string, _, _ int64) {}
-func (n *nopSessionStore) IncrementCompaction(_ context.Context, _ string)           {}
-func (n *nopSessionStore) GetCompactionCount(_ context.Context, _ string) int        { return 0 }
+func (n *nopSessionStore) UpdateMetadata(_ context.Context, _, _, _, _ string)           {}
+func (n *nopSessionStore) AccumulateTokens(_ context.Context, _ string, _, _ int64)      {}
+func (n *nopSessionStore) IncrementCompaction(_ context.Context, _ string)               {}
+func (n *nopSessionStore) GetCompactionCount(_ context.Context, _ string) int            { return 0 }
 func (n *nopSessionStore) GetMemoryFlushCompactionCount(_ context.Context, _ string) int { return 0 }
-func (n *nopSessionStore) SetMemoryFlushDone(_ context.Context, _ string)            {}
+func (n *nopSessionStore) SetMemoryFlushDone(_ context.Context, _ string)                {}
 func (n *nopSessionStore) GetSessionMetadata(_ context.Context, _ string) map[string]string {
 	return nil
 }
@@ -123,7 +123,7 @@ func TestMaybeSummarize_MaxTokensDynamic(t *testing.T) {
 		contextWindow: contextWindow,
 		sessions:      sessions,
 		// hasMemory = false → shouldRunMemoryFlush returns false (skip memory flush)
-		hasMemory:     false,
+		hasMemory: false,
 		// compactionCfg nil → uses DefaultHistoryShare (0.85), keepLast=4
 		compactionCfg: nil,
 		// tokenCounter nil → estimateSummaryInputTokens uses rune/3 fallback

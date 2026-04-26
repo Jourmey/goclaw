@@ -9,10 +9,10 @@ const (
 	ErrAgentTimeout   = "AGENT_TIMEOUT"
 
 	// Additional codes for Go implementation
-	ErrUnauthorized       = "UNAUTHORIZED"
-	ErrNotFound           = "NOT_FOUND"
-	ErrAlreadyExists      = "ALREADY_EXISTS"
-	ErrResourceExhausted  = "RESOURCE_EXHAUSTED"
+	ErrUnauthorized        = "UNAUTHORIZED"
+	ErrNotFound            = "NOT_FOUND"
+	ErrAlreadyExists       = "ALREADY_EXISTS"
+	ErrResourceExhausted   = "RESOURCE_EXHAUSTED"
 	ErrFailedPrecondition  = "FAILED_PRECONDITION"
 	ErrInternal            = "INTERNAL"
 	ErrTenantAccessRevoked = "TENANT_ACCESS_REVOKED"

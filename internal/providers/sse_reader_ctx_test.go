@@ -13,9 +13,9 @@ import (
 
 // countingCloser wraps an io.ReadCloser and counts Close calls.
 type countingCloser struct {
-	mu        sync.Mutex
+	mu         sync.Mutex
 	closeCount int
-	reader    io.Reader
+	reader     io.Reader
 }
 
 func newCountingCloser(r io.Reader) *countingCloser {

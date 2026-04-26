@@ -46,7 +46,7 @@ func (m *mockTokenCounter) CountMessages(_ string, msgs []providers.Message) int
 	return len(msgs) * m.countPerMessage
 }
 func (m *mockTokenCounter) CountToolSchemas(_ string, _ []providers.ToolDefinition) int { return 0 }
-func (m *mockTokenCounter) ModelContextWindow(_ string) int                              { return 200_000 }
+func (m *mockTokenCounter) ModelContextWindow(_ string) int                             { return 200_000 }
 
 // --- ThinkStage tests ---
 
@@ -2114,8 +2114,8 @@ func TestParseTTL_ValidInputs(t *testing.T) {
 		{"5m", 5 * time.Minute},
 		{"30s", 30 * time.Second},
 		{"1h30m", 90 * time.Minute},
-		{"bogus", 5 * time.Minute},  // invalid → fallback
-		{"-1m", 5 * time.Minute},    // negative → fallback
+		{"bogus", 5 * time.Minute}, // invalid → fallback
+		{"-1m", 5 * time.Minute},   // negative → fallback
 	}
 	for _, tc := range cases {
 		got := parseTTL(tc.in)

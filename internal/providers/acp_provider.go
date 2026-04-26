@@ -15,7 +15,7 @@ import (
 
 // acpSessionEntry tracks a live ACP session for one goclaw conversation.
 type acpSessionEntry struct {
-	id       string       // ACP session ID returned by session/new or session/load
+	id       string          // ACP session ID returned by session/new or session/load
 	proc     *acp.ACPProcess // process that owns this session (for respawn detection)
 	lastUsed time.Time
 }

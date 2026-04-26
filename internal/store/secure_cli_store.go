@@ -15,11 +15,11 @@ type SecureCLIBinary struct {
 	BinaryName     string          `json:"binary_name" db:"binary_name"`
 	BinaryPath     *string         `json:"binary_path,omitempty" db:"binary_path"`
 	Description    string          `json:"description" db:"description"`
-	EncryptedEnv   []byte          `json:"-" db:"encrypted_env"`               // AES-256-GCM encrypted JSON — never serialized to API
+	EncryptedEnv   []byte          `json:"-" db:"encrypted_env"`           // AES-256-GCM encrypted JSON — never serialized to API
 	DenyArgs       json.RawMessage `json:"deny_args" db:"deny_args"`       // regex patterns for blocked subcommands
-	DenyVerbose    json.RawMessage `json:"deny_verbose" db:"deny_verbose"`    // blocked verbose/debug flags
+	DenyVerbose    json.RawMessage `json:"deny_verbose" db:"deny_verbose"` // blocked verbose/debug flags
 	TimeoutSeconds int             `json:"timeout_seconds" db:"timeout_seconds"`
-	Tips           string          `json:"tips" db:"tips"`            // hint injected into TOOLS.md context
+	Tips           string          `json:"tips" db:"tips"` // hint injected into TOOLS.md context
 	IsGlobal       bool            `json:"is_global" db:"is_global"`
 	Enabled        bool            `json:"enabled" db:"enabled"`
 	CreatedBy      string          `json:"created_by" db:"created_by"`
@@ -50,12 +50,12 @@ func (b *SecureCLIBinary) MergeGrantOverrides(g *SecureCLIAgentGrant) {
 
 // SecureCLIUserCredential holds per-user encrypted env overrides for a binary.
 type SecureCLIUserCredential struct {
-	ID           uuid.UUID       `json:"id" db:"id"`
-	BinaryID     uuid.UUID       `json:"binary_id" db:"binary_id"`
-	UserID       string          `json:"user_id" db:"user_id"`
-	Metadata     json.RawMessage `json:"metadata,omitempty" db:"metadata"`
-	CreatedAt    string          `json:"created_at" db:"created_at"`
-	UpdatedAt    string          `json:"updated_at" db:"updated_at"`
+	ID        uuid.UUID       `json:"id" db:"id"`
+	BinaryID  uuid.UUID       `json:"binary_id" db:"binary_id"`
+	UserID    string          `json:"user_id" db:"user_id"`
+	Metadata  json.RawMessage `json:"metadata,omitempty" db:"metadata"`
+	CreatedAt string          `json:"created_at" db:"created_at"`
+	UpdatedAt string          `json:"updated_at" db:"updated_at"`
 	// EncryptedEnv is decrypted JSON — never serialized to API.
 	EncryptedEnv []byte `json:"-" db:"encrypted_env"`
 }

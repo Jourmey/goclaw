@@ -1,8 +1,9 @@
 package providers
 
-import "maps"
-
-import "slices"
+import (
+	"maps"
+	"slices"
+)
 
 // ---------------------------------------------------------------------------
 // Union flattening

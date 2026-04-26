@@ -3,8 +3,8 @@
 package integration
 
 import (
-	"errors"
 	"database/sql"
+	"errors"
 	"testing"
 
 	"github.com/google/uuid"

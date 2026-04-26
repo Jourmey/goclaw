@@ -12,8 +12,8 @@ type EventType string
 const (
 	EventSessionCompleted EventType = "session.completed"
 	EventEpisodicCreated  EventType = "episodic.created"
-	EventEntityUpserted EventType = "entity.upserted"
-	EventRunCompleted   EventType = "run.completed"
+	EventEntityUpserted   EventType = "entity.upserted"
+	EventRunCompleted     EventType = "run.completed"
 	EventToolExecuted     EventType = "tool.executed"
 
 	// Context pruning observability (Phase 05)
@@ -26,7 +26,6 @@ const (
 	EventDelegateSent      EventType = "delegate.sent"
 	EventDelegateCompleted EventType = "delegate.completed"
 	EventDelegateFailed    EventType = "delegate.failed"
-
 )
 
 // DomainEvent is a typed event with metadata for the consolidation pipeline.
@@ -121,8 +120,8 @@ type ContextPrunedPayload struct {
 	TokensBefore   int
 	TokensAfter    int
 	Budget         int
-	ResultsTrimmed int    // soft-trimmed count
-	ResultsCleared int    // hard-cleared count
+	ResultsTrimmed int // soft-trimmed count
+	ResultsCleared int // hard-cleared count
 	Compacted      bool
 	Trigger        string // "soft" | "hard" | "compact"
 }

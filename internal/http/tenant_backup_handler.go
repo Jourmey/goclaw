@@ -167,4 +167,3 @@ func (h *TenantBackupHandler) handleDownload(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, entry.fileName))
 	http.ServeContent(w, r, entry.fileName, time.Time{}, f)
 }
-

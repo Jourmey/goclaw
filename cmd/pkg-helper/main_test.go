@@ -119,24 +119,24 @@ func TestValidPkgName(t *testing.T) {
 		{"pkg_with_underscores", true},
 		{"pkg.with.dots", true},
 		// Invalid package names
-		{"-invalid", false},           // starts with hyphen
-		{"--flag", false},             // starts with hyphen
-		{"pkg name", false},           // contains space
-		{"pkg;cmd", false},            // contains semicolon
-		{"pkg|cmd", false},            // contains pipe
-		{"pkg&cmd", false},            // contains ampersand
-		{"pkg`cmd`", false},           // contains backtick
-		{"pkg$var", false},            // contains dollar sign
-		{"pkg<file", false},           // contains angle bracket
-		{"pkg>file", false},           // contains angle bracket
-		{"pkg'quote", false},          // contains quote
-		{"pkg\"quote", false},         // contains quote
-		{"pkg(paren)", false},         // contains parens
-		{"", false},                   // empty
-		{" curl", false},              // starts with space
-		{"curl ", false},              // ends with space
-		{"--index-url=evil", false},   // flag pattern
-		{"-u", false},                 // short flag
+		{"-invalid", false},         // starts with hyphen
+		{"--flag", false},           // starts with hyphen
+		{"pkg name", false},         // contains space
+		{"pkg;cmd", false},          // contains semicolon
+		{"pkg|cmd", false},          // contains pipe
+		{"pkg&cmd", false},          // contains ampersand
+		{"pkg`cmd`", false},         // contains backtick
+		{"pkg$var", false},          // contains dollar sign
+		{"pkg<file", false},         // contains angle bracket
+		{"pkg>file", false},         // contains angle bracket
+		{"pkg'quote", false},        // contains quote
+		{"pkg\"quote", false},       // contains quote
+		{"pkg(paren)", false},       // contains parens
+		{"", false},                 // empty
+		{" curl", false},            // starts with space
+		{"curl ", false},            // ends with space
+		{"--index-url=evil", false}, // flag pattern
+		{"-u", false},               // short flag
 	}
 
 	for _, tt := range tests {
@@ -269,11 +269,11 @@ func unmarshalRequest(jsonStr string, req *request) error {
 // TestResponse_JSON tests response struct JSON marshaling.
 func TestResponse_JSON(t *testing.T) {
 	tests := []struct {
-		name     string
-		resp     response
-		wantOK   bool
-		wantErr  string
-		omitErr  bool
+		name    string
+		resp    response
+		wantOK  bool
+		wantErr string
+		omitErr bool
 	}{
 		{
 			name:    "success response",

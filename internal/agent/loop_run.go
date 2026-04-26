@@ -77,12 +77,12 @@ func (l *Loop) Run(ctx context.Context, req RunRequest) (*RunResult, error) {
 			Name:         traceName,
 			InputPreview: truncateStr(req.Message, l.traceCollector.PreviewMaxLen()),
 			Status:       store.TraceStatusRunning,
-			StartTime:    now,
-			CreatedAt:    now,
-			Tags:         req.TraceTags,
+			StartTime:    now.Unix(),
+			CreatedAt:    now.Unix(),
+			Tags:         nil, // TraceTags removed - stub
 		}
 		if l.agentUUID != uuid.Nil {
-			trace.AgentID = &l.agentUUID
+			trace.AgentID = l.agentUUID
 		}
 		// Link to parent trace: delegation context or explicit LinkedTraceID (team task runs).
 		if delegateParent := tracing.DelegateParentTraceIDFromContext(ctx); delegateParent != uuid.Nil {

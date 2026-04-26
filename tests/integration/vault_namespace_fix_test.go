@@ -21,11 +21,12 @@ import (
 // LLM passed it to vault_read, yielding "document not found".
 //
 // Validates:
-//   A. types="context" → results contain only vault source (no kg leak).
-//   B. empty types   → results contain both vault + kg sources with hint markers.
-//   C. vault_read(KG id) → redirect error mentioning knowledge_graph_search.
-//   D. vault_read(vault id) → success with content.
-//   E. vault_read(random) → "document not found" (truly missing).
+//
+//	A. types="context" → results contain only vault source (no kg leak).
+//	B. empty types   → results contain both vault + kg sources with hint markers.
+//	C. vault_read(KG id) → redirect error mentioning knowledge_graph_search.
+//	D. vault_read(vault id) → success with content.
+//	E. vault_read(random) → "document not found" (truly missing).
 func TestVaultNamespaceFix_thuyTienScenario(t *testing.T) {
 	db := testDB(t)
 	tenantID, agentID := seedTenantAgent(t, db)

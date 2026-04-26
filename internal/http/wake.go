@@ -45,8 +45,8 @@ type wakeRequest struct {
 }
 
 type wakeResponse struct {
-	Content string   `json:"content"`
-	RunID   string   `json:"run_id"`
+	Content string     `json:"content"`
+	RunID   string     `json:"run_id"`
 	Usage   *wakeUsage `json:"usage,omitempty"`
 }
 

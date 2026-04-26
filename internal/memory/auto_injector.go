@@ -32,9 +32,9 @@ type InjectParams struct {
 	// Target length: ≤ ~400 chars. Longer context dilutes the embedding.
 	RecentContext string
 
-	MaxEntries  int     // default 5
-	MaxTokens   int     // default 200
-	Threshold   float64 // relevance threshold (default 0.3)
+	MaxEntries int     // default 5
+	MaxTokens  int     // default 200
+	Threshold  float64 // relevance threshold (default 0.3)
 }
 
 // InjectResult contains the injection output + observability data.
@@ -54,11 +54,11 @@ type L0Summary struct {
 
 // MemoryConfig holds per-agent memory settings (stored in agents.settings JSONB).
 type MemoryConfig struct {
-	AutoInjectEnabled   bool    `json:"auto_inject_enabled"`    // default true
-	AutoInjectThreshold float64 `json:"auto_inject_threshold"`  // default 0.3
-	AutoInjectMaxTokens int     `json:"auto_inject_max_tokens"` // default 200
-	EpisodicTTLDays     int     `json:"episodic_ttl_days"`      // default 90
-	ConsolidationEnabled bool   `json:"consolidation_enabled"`  // default true
+	AutoInjectEnabled    bool    `json:"auto_inject_enabled"`    // default true
+	AutoInjectThreshold  float64 `json:"auto_inject_threshold"`  // default 0.3
+	AutoInjectMaxTokens  int     `json:"auto_inject_max_tokens"` // default 200
+	EpisodicTTLDays      int     `json:"episodic_ttl_days"`      // default 90
+	ConsolidationEnabled bool    `json:"consolidation_enabled"`  // default true
 }
 
 // DefaultMemoryConfig returns sensible defaults.
