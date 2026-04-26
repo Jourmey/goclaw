@@ -77,24 +77,11 @@ func (d *gatewayDeps) wireHTTPHandlersOnServer(
 	if h.builtinTools != nil {
 		d.server.SetBuiltinToolsHandler(h.builtinTools)
 	}
-	if h.pendingMessages != nil {
-		if pc := d.cfg.Channels.PendingCompaction; pc != nil {
-			h.pendingMessages.SetKeepRecent(pc.KeepRecent)
-			h.pendingMessages.SetMaxTokens(pc.MaxTokens)
-			h.pendingMessages.SetProviderModel(pc.Provider, pc.Model)
-		}
-		d.server.SetPendingMessagesHandler(h.pendingMessages)
-	}
 	if h.secureCLI != nil {
 		d.server.SetSecureCLIHandler(h.secureCLI)
 	}
 	if h.secureCLIGrant != nil {
 		d.server.SetSecureCLIGrantHandler(h.secureCLIGrant)
-	}
-
-	// Activity audit log API
-	if d.pgStores.Activity != nil {
-		d.server.SetActivityHandler(httpapi.NewActivityHandler(d.pgStores.Activity))
 	}
 
 	// System configs API
@@ -154,49 +141,6 @@ func (d *gatewayDeps) wireHTTPHandlersOnServer(
 	// Memory management API
 	if d.pgStores != nil && d.pgStores.Memory != nil {
 		d.server.SetMemoryHandler(httpapi.NewMemoryHandler(d.pgStores.Memory))
-	}
-
-	// Knowledge graph API
-	if d.pgStores != nil && d.pgStores.KnowledgeGraph != nil {
-		d.server.SetKnowledgeGraphHandler(httpapi.NewKnowledgeGraphHandler(d.pgStores.KnowledgeGraph, d.providerRegistry))
-	}
-
-	// V3: Evolution metrics + suggestions API
-	if d.pgStores != nil && d.pgStores.EvolutionMetrics != nil && d.pgStores.EvolutionSuggestions != nil {
-		var evoOpts []httpapi.EvolutionHandlerOpt
-		if manageStore, ok := d.pgStores.Skills.(store.SkillManageStore); ok && d.skillsLoader != nil {
-			evoOpts = append(evoOpts, httpapi.WithSkillCreation(manageStore, d.skillsLoader, d.dataDir))
-		}
-		if d.pgStores.Agents != nil {
-			evoOpts = append(evoOpts, httpapi.WithAgentStore(d.pgStores.Agents))
-		}
-		if d.pgStores.BuiltinToolTenantCfgs != nil {
-			evoOpts = append(evoOpts, httpapi.WithToolTenantCfgs(d.pgStores.BuiltinToolTenantCfgs))
-		}
-		d.server.SetEvolutionHandler(httpapi.NewEvolutionHandler(d.pgStores.EvolutionMetrics, d.pgStores.EvolutionSuggestions, evoOpts...))
-	}
-
-	// V3: Knowledge Vault document API
-	if d.pgStores != nil && d.pgStores.Vault != nil {
-		vh := httpapi.NewVaultHandler(d.pgStores.Vault, d.pgStores.Teams, d.workspace, d.domainBus, d.pgStores.Agents, d.pgStores.Teams)
-		vh.SetEnrichProgress(d.enrichProgress)
-		vh.SetEnrichWorker(d.enrichWorker)
-		d.server.SetVaultHandler(vh)
-
-		// Lightweight graph visualization endpoints (vault + KG).
-		var kgGraph store.KGGraphStore
-		if d.pgStores.KnowledgeGraph != nil {
-			kgGraph = newKGGraphStore(d.pgStores.DB)
-		}
-		vgHandler := httpapi.NewVaultGraphHandler(
-			newVaultGraphStore(d.pgStores.DB), kgGraph, d.pgStores.Teams,
-		)
-		d.server.SetVaultGraphHandler(vgHandler)
-	}
-
-	// V3: Episodic memory summaries API
-	if d.pgStores != nil && d.pgStores.Episodic != nil {
-		d.server.SetEpisodicHandler(httpapi.NewEpisodicHandler(d.pgStores.Episodic))
 	}
 
 	// V3: Orchestration mode API (read-only)

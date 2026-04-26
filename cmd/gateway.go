@@ -134,7 +134,7 @@ func runGateway() {
 		tools.DetectServerIPs(context.Background())
 	}
 
-	toolsReg, execApprovalMgr, sandboxMgr, browserMgr, webFetchTool, _, permPE, toolPE, dataDir, agentCfg := setupToolRegistry(cfg, workspace, providerRegistry)
+	toolsReg, execApprovalMgr, sandboxMgr, browserMgr, _, _, permPE, toolPE, dataDir, agentCfg := setupToolRegistry(cfg, workspace, providerRegistry)
 	if browserMgr != nil {
 		defer browserMgr.Close()
 	}
@@ -268,7 +268,7 @@ func runGateway() {
 	_ = skillSearchTool // used via wireExtras → skillsLoader; kept for type clarity
 
 	// Register cron/heartbeat/session/message tools, aliases, allow-paths, store wiring.
-	heartbeatTool, hasMemory := wireExtraTools(pgStores, toolsReg, msgBus, workspace, dataDir, agentCfg, globalSkillsDir, builtinSkillsDir)
+	_, hasMemory := wireExtraTools(pgStores, toolsReg, msgBus, workspace, dataDir, agentCfg, globalSkillsDir, builtinSkillsDir)
 
 	// Create all agents — resolved lazily from database by the managed resolver.
 	agentRouter := agent.NewRouter()
@@ -382,7 +382,7 @@ func runGateway() {
 
 	// Register all RPC methods
 	server.SetLogTee(logTee)
-	pairingMethods, heartbeatMethods, chatMethods, cfgPermsMethods := registerAllMethods(server, agentRouter, pgStores.Sessions, pgStores.Cron, pgStores.Pairing, cfg, cfgPath, workspace, dataDir, msgBus, execApprovalMgr, pgStores.Agents, pgStores.Skills, pgStores.ConfigSecrets, pgStores.Teams, contextFileInterceptor, logTee, pgStores.Heartbeats, pgStores.ConfigPermissions, pgStores.SystemConfigs, pgStores.Tenants, pgStores.SkillTenantCfgs)
+	_, chatMethods, cfgPermsMethods := registerAllMethods(server, agentRouter, pgStores.Sessions, pgStores.Cron, pgStores.Pairing, cfg, cfgPath, workspace, dataDir, msgBus, execApprovalMgr, pgStores.Agents, pgStores.Skills, pgStores.ConfigSecrets, pgStores.Teams, contextFileInterceptor, logTee, pgStores.Heartbeats, pgStores.ConfigPermissions, pgStores.SystemConfigs, pgStores.Tenants, pgStores.SkillTenantCfgs)
 
 	// Phase 3: Agent hooks RPC methods (hooks.list/create/update/delete/toggle/test/history).
 	// Hooks module removed in v3.x
@@ -407,8 +407,6 @@ func runGateway() {
 		wakeH.SetPostTurnProcessor(postTurn)  // HTTP: /v1/agents/{id}/wake
 	}
 
-	// Wire pairing event broadcasts to all WS clients.
-	pairingMethods.SetBroadcaster(server.BroadcastEvent)
 	// Wire pairing request callback — works for both PG and SQLite stores.
 	type pairingRequestNotifier interface {
 		SetOnRequest(func(code, senderID, channel, chatID string))
@@ -471,22 +469,6 @@ func runGateway() {
 		}
 	}
 
-	// Channels subsystem removed in v3.x
-	if false {
-		// Register config-based channels as fallback when no DB instances loaded.
-		registerConfigChannels(cfg, channelMgr, msgBus, pgStores, instanceLoader)
-
-		// Register channels/instances/links/teams RPC methods
-		wireChannelRPCMethods(server, pgStores, channelMgr, agentRouter, msgBus, workspace)
-
-		// Wire channel event subscribers (cache invalidation, pairing, cascade disable)
-		wireChannelEventSubscribers(msgBus, server, pgStores, channelMgr, instanceLoader, pairingMethods, cfg)
-	}
-
-	// Audit log subscriber + team task event subscribers.
-	auditCh := deps.wireAuditSubscriber()
-	deps.wireEventSubscribers()
-
 	// Setup graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -523,40 +505,11 @@ func runGateway() {
 	)
 	defer sched.Stop()
 
-	// Start cron + heartbeat ticker, wire wake functions and adaptive throttle.
-	var heartbeatTicker interface{}
-	if false {
-		heartbeatTicker = startCronAndHeartbeat(pgStores, server, sched, msgBus, providerRegistry, channelMgr, cfg, heartbeatTool, heartbeatMethods)
-	}
-
-	// Subscribe to agent events for channel streaming/reaction forwarding - removed in v3.x
-	if false {
-		deps.wireChannelStreamingSubscriber()
-	}
-
 	// Slow tool notification subscriber — direct outbound when tool exceeds adaptive threshold.
 	wireSlowToolNotifySubscriber(msgBus)
 
 	// Inbound message consumer setup
 	consumerTeamStore := pgStores.Teams
-
-	// Quota checker - removed in v3.x
-	var quotaChecker interface{}
-	if false {
-		config.MergeChannelGroupQuotas(cfg)
-		if cfg.Gateway.Quota != nil && cfg.Gateway.Quota.Enabled {
-			quotaChecker = channels.NewQuotaChecker(pgStores.DB, *cfg.Gateway.Quota)
-			defer quotaChecker.(*channels.QuotaChecker).Stop()
-			slog.Info("channel quota enabled",
-				"default_hour", cfg.Gateway.Quota.Default.Hour,
-				"default_day", cfg.Gateway.Quota.Default.Day,
-				"default_week", cfg.Gateway.Quota.Default.Week,
-			)
-		}
-
-		// Register quota usage RPC.
-		methods.NewQuotaMethods(quotaChecker, pgStores.DB).Register(server.Router())
-	}
 
 	// API key management RPC
 	if pgStores.APIKeys != nil {
@@ -584,16 +537,10 @@ func runGateway() {
 
 	// Wire lifecycle: config-reload subscribers, consumer, task recovery, shutdown, server start.
 	deps.runLifecycle(ctx, cancel, lifecycleDeps{
-		sched:           sched,
-		heartbeatTicker: heartbeatTicker,
-		quotaChecker:    quotaChecker,
-		webFetchTool:    webFetchTool,
-		// TTS removed in v3.x
-		sandboxMgr:        sandboxMgr,
+		sched:             sched,
 		postTurn:          postTurn,
 		subagentMgr:       subagentMgr,
 		consumerTeamStore: consumerTeamStore,
-		auditCh:           auditCh,
 		sigCh:             sigCh,
 	})
 }

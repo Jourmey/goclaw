@@ -8,8 +8,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/nextlevelbuilder/goclaw/internal/bootstrap"
 	"github.com/nextlevelbuilder/goclaw/internal/bus"
 	"github.com/nextlevelbuilder/goclaw/internal/config"
@@ -23,7 +21,6 @@ import (
 	"github.com/nextlevelbuilder/goclaw/internal/tools"
 	"github.com/nextlevelbuilder/goclaw/internal/tracing"
 	"github.com/nextlevelbuilder/goclaw/pkg/browser"
-	"github.com/nextlevelbuilder/goclaw/pkg/protocol"
 )
 
 // setupToolRegistry creates the tool registry and registers all tools.
@@ -248,56 +245,11 @@ func wireTracingAndCron(
 	dataDir string,
 ) (*tracing.Collector, *tracing.SnapshotWorker) {
 	var traceCollector *tracing.Collector
-	if stores.Tracing != nil {
-		traceCollector = tracing.NewCollector(stores.Tracing)
-		traceCollector.OnFlush = func(traceIDs []uuid.UUID) {
-			ids := make([]string, len(traceIDs))
-			for i, id := range traceIDs {
-				ids[i] = id.String()
-			}
-			msgBus.Broadcast(bus.Event{
-				Name:    protocol.EventTraceUpdated,
-				Payload: map[string]any{"trace_ids": ids},
-			})
-		}
-		// Immediate status broadcast on every successful status write (bypasses 5s flush).
-		traceCollector.SetStatusBroadcaster(func(p tracing.TraceStatusPayload, tid uuid.UUID) {
-			msgBus.Broadcast(bus.Event{
-				Name:     protocol.EventTraceStatusChanged,
-				Payload:  p,
-				TenantID: tid,
-			})
-		})
-		traceCollector.Start()
-		slog.Info("LLM tracing enabled")
-	}
 
 	// Start snapshot worker for hourly usage aggregation
 	var snapshotWorker *tracing.SnapshotWorker
-	if stores.Snapshots != nil {
-		snapshotWorker = tracing.NewSnapshotWorker(stores.DB, stores.Snapshots)
-		snapshotWorker.Start()
-
-		// Backfill historical data in background
-		go func() {
-			count, err := snapshotWorker.Backfill(context.Background())
-			if err != nil {
-				slog.Warn("snapshot backfill failed", "error", err)
-			} else if count > 0 {
-				slog.Info("snapshot backfill complete", "hours", count)
-			}
-		}()
-	}
 
 	// Wire cron config from config.json
-	cronRetryCfg := cfg.Cron.ToRetryConfig()
-	if stores.Cron != nil {
-		stores.Cron.SetOnJob(nil) // ensure initialized; actual handler set below
-		_ = cronRetryCfg          // config available; cron store reads it internally
-		if cfg.Cron.DefaultTimezone != "" {
-			stores.Cron.SetDefaultTimezone(cfg.Cron.DefaultTimezone)
-		}
-	}
 
 	// Load secrets from config_secrets table before env overrides.
 	// Precedence: config.json → DB secrets → env vars (highest).

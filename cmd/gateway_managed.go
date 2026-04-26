@@ -2,8 +2,7 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
+	"github.com/nextlevelbuilder/goclaw/internal/hooks"
 	"log/slog"
 	"path/filepath"
 
@@ -14,13 +13,11 @@ import (
 	"github.com/nextlevelbuilder/goclaw/internal/agent"
 	"github.com/nextlevelbuilder/goclaw/internal/bus"
 	"github.com/nextlevelbuilder/goclaw/internal/config"
-	"github.com/nextlevelbuilder/goclaw/internal/edition"
 	"github.com/nextlevelbuilder/goclaw/internal/eventbus"
 	httpapi "github.com/nextlevelbuilder/goclaw/internal/http"
 	mcpbridge "github.com/nextlevelbuilder/goclaw/internal/mcp"
 	"github.com/nextlevelbuilder/goclaw/internal/media"
 	memorypkg "github.com/nextlevelbuilder/goclaw/internal/memory"
-	"github.com/nextlevelbuilder/goclaw/internal/orchestration"
 	"github.com/nextlevelbuilder/goclaw/internal/providers"
 	"github.com/nextlevelbuilder/goclaw/internal/sandbox"
 	"github.com/nextlevelbuilder/goclaw/internal/skills"
@@ -82,7 +79,6 @@ func wireExtras(
 		toolsReg.Register(tools.NewReadDocumentTool(providerReg, mediaStore))
 		toolsReg.Register(tools.NewReadAudioTool(providerReg, mediaStore))
 		toolsReg.Register(tools.NewReadVideoTool(providerReg, mediaStore))
-		toolsReg.Register(tools.NewCreateVideoTool(providerReg))
 		slog.Info("media tools registered", "tools", "read_document,read_audio,read_video,create_video")
 	}
 
@@ -113,21 +109,11 @@ func wireExtras(
 	sandboxEnabled := sandboxMgr != nil
 	sandboxContainerDir := ""
 	sandboxWorkspaceAccess := ""
-	if sandboxEnabled {
-		sbCfg := appCfg.Agents.Defaults.Sandbox
-		if sbCfg != nil {
-			resolved := sbCfg.ToSandboxConfig()
-			sandboxContainerDir = resolved.ContainerWorkdir()
-			sandboxWorkspaceAccess = string(resolved.WorkspaceAccess)
-		}
-	}
 
 	// 5. Shared MCP connection pool (eliminates duplicate connections across agents)
 	var mcpPool *mcpbridge.Pool
-	var mcpGrantChecker mcpbridge.GrantChecker
 	if stores.MCP != nil {
 		mcpPool = mcpbridge.NewPool(mcpbridge.DefaultPoolConfig())
-		mcpGrantChecker = mcpbridge.NewStoreGrantChecker(stores.MCP, msgBus)
 	}
 
 	// 6. Set up agent resolver: lazy-creates Loops from DB
@@ -138,54 +124,12 @@ func wireExtras(
 
 	// V3 auto-inject: create AutoInjector if episodic store is available.
 	var autoInjector memorypkg.AutoInjector
-	if stores.Episodic != nil {
-		autoInjector = memorypkg.NewAutoInjector(stores.Episodic, stores.EvolutionMetrics)
-	}
 
 	// vaultIntc is set later by wireVault but captured by closure in OnTextUploaded.
 	var vaultIntc *tools.VaultInterceptor
 
 	// Agent Hooks (Issue #875) — lifecycle dispatcher + handlers.
-	var hookDispatcher hooks.Dispatcher = hooks.NewNoopDispatcher()
-	if hs, ok := stores.Hooks.(hooks.HookStore); ok && hs != nil {
-		// Phase 04: wire builtin registry. Install a strip-all lookup FIRST so a
-		// Load() failure leaves the dispatcher failing closed (no wide fallback
-		// via the Phase 03 permissive default). On successful Load we swap in the
-		// real per-id allowlist, then UPSERT canonical rows with stable UUIDv5s.
-		// Seed failures log but never block startup.
-		hooks.SetBuiltinAllowlistLookup(func(uuid.UUID) []string { return nil })
-		if err := hookbuiltin.Load(); err != nil {
-			slog.Warn("hooks.builtin_load_failed", "err", err)
-		} else {
-			hooks.SetBuiltinAllowlistLookup(hookbuiltin.AllowlistFor)
-			if err := hookbuiltin.Seed(context.Background(), hs, appCfg.Hooks); err != nil {
-				slog.Warn("hooks.builtin_seed_failed", "err", err)
-			}
-		}
-
-		// Phase 07: runtime migration — auto-disable legacy command-type hooks
-		// on Standard edition. No-op on Lite. Idempotent. Runs synchronously
-		// before listeners so traffic never sees a command hook fire on a
-		// post-Wave-1 Standard instance.
-		if n, err := hooks.DisableLegacyCommandHooks(context.Background(), hs, edition.Current()); err != nil {
-			slog.Warn("hooks.command_migration_failed", "err", err)
-		} else if n > 0 {
-			slog.Info("hooks.command_migration_ran",
-				"disabled_count", n, "edition", edition.Current().Name)
-		}
-
-		handlers := buildHookHandlers(stores, providerReg, appCfg.Hooks)
-		stdOpts := hooks.StdDispatcherOpts{
-			Store:    hs,
-			Audit:    hooks.NewAuditWriter(hs, ""),
-			Handlers: handlers,
-		}
-		hookDispatcher = hooks.NewStdDispatcher(stdOpts)
-		hooks.SubscribeDelegateEvents(domainBus, hookDispatcher)
-		// Stash handlers for later gateway.go wiring (test runner).
-		sharedHookHandlers = handlers
-		slog.Info("agent hooks dispatcher wired", "handlers", "command,http,prompt")
-	}
+	var hookDispatcher hooks.Dispatcher
 
 	resolver := agent.NewManagedResolver(agent.ResolverDeps{
 		AgentStore:             stores.Agents,
@@ -218,25 +162,20 @@ func wireExtras(
 		DataDir:                workspace,
 		SecureCLIStore:         stores.SecureCLI,
 		BuiltinToolStore:       stores.BuiltinTools,
-		MCPStore:               stores.MCP,
-		MCPPool:                mcpPool,
-		MCPGrantChecker:        mcpGrantChecker,
 		ConfigPermStore:        stores.ConfigPermissions,
 		MediaStore:             mediaStore,
 		ModelPricing:           appCfg.Telemetry.ModelPricing,
 		TracingStore:           stores.Tracing,
 		MemoryStore:            stores.Memory,
-		ContactStore:           stores.Contacts,
 		TenantStore:            stores.Tenants,
 		BuiltinToolTenantCfgs:  stores.BuiltinToolTenantCfgs,
 		SkillTenantCfgs:        stores.SkillTenantCfgs,
 		SystemConfigs:          stores.SystemConfigs,
 		Workspace:              workspace,
 		// TTS removed in v3.x
-		AutoInjector:          autoInjector,
-		EvolutionMetricsStore: stores.EvolutionMetrics,
-		DomainBus:             domainBus,
-		HookDispatcher:        hookDispatcher,
+		AutoInjector:   autoInjector,
+		DomainBus:      domainBus,
+		HookDispatcher: hookDispatcher,
 		OnTextUploaded: func(ctx context.Context, path, content string) {
 			if vaultIntc != nil {
 				vaultIntc.AfterWrite(ctx, path, content)
@@ -290,10 +229,6 @@ func wireExtras(
 	var writeMemIntc *tools.MemoryInterceptor
 	if stores.Memory != nil {
 		writeMemIntc = tools.NewMemoryInterceptor(stores.Memory, workspace)
-		// Hook KG extraction on memory writes if KG store is available
-		if stores.KnowledgeGraph != nil && stores.BuiltinTools != nil {
-			writeMemIntc.SetKGExtractFunc(buildKGExtractFunc(stores.KnowledgeGraph, stores.BuiltinTools, providerReg))
-		}
 	}
 	if readTool, ok := toolsReg.Get("read_file"); ok {
 		if ia, ok := readTool.(tools.InterceptorAware); ok {
@@ -361,82 +296,6 @@ func wireExtras(
 		}
 		slog.Info("memory layering enabled")
 	}
-
-	// V3: Wire episodic store + evolution metrics on memory tools (search + expand)
-	if stores.Episodic != nil {
-		if searchTool, ok := toolsReg.Get("memory_search"); ok {
-			if mst, ok := searchTool.(*tools.MemorySearchTool); ok {
-				mst.SetEpisodicStore(stores.Episodic)
-				if stores.EvolutionMetrics != nil {
-					mst.SetEvolutionMetricsStore(stores.EvolutionMetrics)
-				}
-			}
-		}
-		if expandTool, ok := toolsReg.Get("memory_expand"); ok {
-			if met, ok := expandTool.(*tools.MemoryExpandTool); ok {
-				met.SetEpisodicStore(stores.Episodic)
-			}
-		}
-		slog.Info("v3 episodic memory wired to tools")
-	}
-
-	// Wire knowledge graph store on KG tool + hint in memory_search results
-	if stores.KnowledgeGraph != nil {
-		if kgTool, ok := toolsReg.Get("knowledge_graph_search"); ok {
-			if kgt, ok := kgTool.(*tools.KnowledgeGraphSearchTool); ok {
-				kgt.SetKGStore(stores.KnowledgeGraph)
-			}
-		}
-		// Enable KG hint in memory_search results
-		if searchTool, ok := toolsReg.Get("memory_search"); ok {
-			if mst, ok := searchTool.(*tools.MemorySearchTool); ok {
-				mst.SetHasKG(true)
-			}
-		}
-		slog.Info("knowledge graph tool wired (Postgres)")
-	}
-
-	// Wire vault tools and interceptors (conditional on vault store availability)
-	vaultIntc = wireVault(stores, toolsReg, workspace, domainBus)
-
-	// Wire delegate tool for inter-agent delegation via agent_links.
-	if stores.AgentLinks != nil && stores.Agents != nil {
-		delegateRunFn := func(ctx context.Context, req tools.DelegateRequest) (tools.DelegateResult, error) {
-			loop, err := agentRouter.Get(ctx, req.ToAgentKey)
-			if err != nil {
-				return tools.DelegateResult{}, fmt.Errorf("target agent %q not found: %w", req.ToAgentKey, err)
-			}
-			sessionKey := fmt.Sprintf("delegate:%s:%s:%s",
-				req.FromAgentID.String()[:8], req.ToAgentKey, req.DelegationID)
-
-			// Link delegate trace to parent trace
-			delegateCtx := tracing.WithDelegateParentTraceID(ctx, tracing.TraceIDFromContext(ctx))
-
-			runReq := agent.RunRequest{
-				RunID:         uuid.New().String(),
-				SessionKey:    sessionKey,
-				Message:       req.Task,
-				UserID:        req.UserID,
-				Channel:       "delegate",
-				RunKind:       "delegate",
-				DelegationID:  req.DelegationID,
-				ParentAgentID: req.FromAgentKey,
-			}
-			result, err := loop.Run(delegateCtx, runReq)
-			if err != nil {
-				return tools.DelegateResult{}, err
-			}
-			cr := orchestration.CaptureFromRunResult(result, 0)
-			return tools.DelegateResult{Content: cr.Content, Media: cr.Media}, nil
-		}
-		delegateTool := tools.NewDelegateTool(stores.AgentLinks, stores.Agents, domainBus, delegateRunFn)
-		delegateTool.SetMsgBus(msgBus)
-		delegateTool.SetHookDispatcher(hookDispatcher)
-		toolsReg.Register(delegateTool)
-		slog.Info("delegate tool wired")
-	}
-
-	// --- Cache invalidation event subscribers ---
 
 	// Context file cache: invalidate on agent/context data changes
 	if contextFileInterceptor != nil {
@@ -522,48 +381,6 @@ func wireExtras(
 		agentRouter.InvalidateAll()
 	})
 
-	// Cron cache: invalidate job cache on cron changes
-	if ci, ok := stores.Cron.(store.CacheInvalidatable); ok {
-		msgBus.Subscribe(bus.TopicCacheCron, func(event bus.Event) {
-			if event.Name != protocol.EventCacheInvalidate {
-				return
-			}
-			payload, ok := event.Payload.(bus.CacheInvalidatePayload)
-			if !ok || payload.Kind != bus.CacheKindCron {
-				return
-			}
-			ci.InvalidateCache()
-		})
-	}
-
-	// Heartbeat cache: invalidate due cache on config changes
-	if hi, ok := stores.Heartbeats.(store.CacheInvalidatable); ok {
-		msgBus.Subscribe(bus.TopicCacheHeartbeat, func(event bus.Event) {
-			if event.Name != protocol.EventCacheInvalidate {
-				return
-			}
-			payload, ok := event.Payload.(bus.CacheInvalidatePayload)
-			if !ok || payload.Kind != bus.CacheKindHeartbeat {
-				return
-			}
-			hi.InvalidateCache()
-		})
-	}
-
-	// Config permissions cache: invalidate on grant/revoke changes
-	if pi, ok := stores.ConfigPermissions.(store.CacheInvalidatable); ok {
-		msgBus.Subscribe(bus.TopicCacheConfigPerms, func(event bus.Event) {
-			if event.Name != protocol.EventCacheInvalidate {
-				return
-			}
-			payload, ok := event.Payload.(bus.CacheInvalidatePayload)
-			if !ok || payload.Kind != bus.CacheKindConfigPerms {
-				return
-			}
-			pi.InvalidateCache()
-		})
-	}
-
 	// Builtin tools cache: re-apply disables on settings/enabled changes.
 	// Tenant-scoped events only invalidate that tenant's cached agents — the
 	// global registry disables list is master-only and unaffected.
@@ -585,58 +402,8 @@ func wireExtras(
 		})
 	}
 
-	// V3 evolution: daily suggestion engine + weekly evaluation cron (background goroutine).
-	if stores.EvolutionMetrics != nil && stores.EvolutionSuggestions != nil {
-		sugEngine := agent.NewSuggestionEngine(stores.EvolutionMetrics, stores.EvolutionSuggestions)
-		go runEvolutionCron(stores, sugEngine)
-	}
-
 	// Register team tools (team_tasks + workspace interceptor) if team store is available.
 	var postTurn tools.PostTurnProcessor
-	if stores.Teams != nil && stores.Agents != nil {
-		teamMgr := tools.NewTeamToolManager(stores.Teams, stores.Agents, msgBus, workspace)
-		postTurn = teamMgr
-		var teamPolicy tools.TeamActionPolicy = tools.FullTeamPolicy{}
-		if !edition.Current().TeamFullMode {
-			teamPolicy = tools.LiteTeamPolicy{}
-		}
-		toolsReg.Register(tools.NewTeamTasksTool(teamMgr, teamPolicy))
-		// Wire workspace interceptor into write_file so team workspace validation
-		// and event broadcasting happen transparently via existing file tools.
-		wsInterceptor := tools.NewWorkspaceInterceptor(teamMgr)
-		if writeTool, ok := toolsReg.Get("write_file"); ok {
-			if wia, ok := writeTool.(tools.WorkspaceInterceptorAware); ok {
-				wia.SetWorkspaceInterceptor(wsInterceptor)
-			}
-		}
-		slog.Info("team tools registered", "workspace", workspace)
-
-		// Team cache invalidation via pub/sub
-		msgBus.Subscribe(bus.TopicCacheTeam, func(event bus.Event) {
-			if event.Name != protocol.EventCacheInvalidate {
-				return
-			}
-			payload, ok := event.Payload.(bus.CacheInvalidatePayload)
-			if !ok || payload.Kind != bus.CacheKindTeam {
-				return
-			}
-			teamMgr.InvalidateTeam()
-		})
-
-		// Agent cache invalidation: clear TeamToolManager's agent lookup cache
-		// when agent data changes (update/delete via WS or HTTP).
-		msgBus.Subscribe("cache.agent.team_mgr", func(event bus.Event) {
-			if event.Name != protocol.EventCacheInvalidate {
-				return
-			}
-			payload, ok := event.Payload.(bus.CacheInvalidatePayload)
-			if !ok || payload.Kind != bus.CacheKindAgent {
-				return
-			}
-			teamMgr.InvalidateAgentCache()
-		})
-		slog.Info("team tools registered")
-	}
 
 	// User workspace cache: invalidate per-user workspace path on profile changes
 	msgBus.Subscribe(bus.TopicCacheUserWorkspace, func(event bus.Event) {
@@ -685,72 +452,3 @@ func wireExtras(
 	return contextFileInterceptor, mcpPool, mediaStore, postTurn
 }
 
-// kgSettings holds KG extraction settings from the builtin_tools table.
-type kgSettings struct {
-	ExtractOnMemoryWrite bool    `json:"extract_on_memory_write"`
-	ExtractionProvider   string  `json:"extraction_provider"`
-	ExtractionModel      string  `json:"extraction_model"`
-	MinConfidence        float64 `json:"min_confidence"`
-}
-
-// buildKGExtractFunc returns a callback that extracts entities from memory content.
-// Settings are read from the builtin_tools table on each invocation (not cached),
-// so changes take effect immediately without restart.
-func buildKGExtractFunc(kgStore store.KnowledgeGraphStore, bts store.BuiltinToolStore, providerReg *providers.Registry) tools.KGExtractFunc {
-	return func(ctx context.Context, agentID, userID, content string) {
-		slog.Info("kg extract: triggered", "agent", agentID, "user", userID, "content_len", len(content))
-		// Read settings from DB on each call so admin changes take effect immediately
-		raw, err := bts.GetSettings(ctx, "knowledge_graph_search")
-		if err != nil || raw == nil {
-			slog.Warn("kg extract: no settings found", "error", err)
-			return
-		}
-		var settings kgSettings
-		if err := json.Unmarshal(raw, &settings); err != nil {
-			slog.Warn("kg extract: invalid settings", "error", err)
-			return
-		}
-		if !settings.ExtractOnMemoryWrite || settings.ExtractionProvider == "" || settings.ExtractionModel == "" {
-			return
-		}
-
-		p, err := providerReg.Get(ctx, settings.ExtractionProvider)
-		if err != nil {
-			slog.Warn("kg extract: provider not found", "provider", settings.ExtractionProvider, "error", err)
-			return
-		}
-		extractor := kg.NewExtractor(p, settings.ExtractionModel, settings.MinConfidence)
-		result, err := extractor.Extract(ctx, content)
-		if err != nil {
-			slog.Warn("kg extract: extraction failed", "agent", agentID, "error", err)
-			return
-		}
-		if len(result.Entities) == 0 && len(result.Relations) == 0 {
-			return
-		}
-		for i := range result.Entities {
-			result.Entities[i].AgentID = agentID
-			result.Entities[i].UserID = userID
-		}
-		for i := range result.Relations {
-			result.Relations[i].AgentID = agentID
-			result.Relations[i].UserID = userID
-		}
-		entityIDs, err := kgStore.IngestExtraction(ctx, agentID, userID, result.Entities, result.Relations)
-		if err != nil {
-			slog.Warn("kg extract: ingest failed", "agent", agentID, "error", err)
-			return
-		}
-		slog.Info("kg extract: ingested from memory write", "agent", agentID, "entities", len(result.Entities), "relations", len(result.Relations))
-
-		// Run inline dedup on newly upserted entities (best-effort, non-blocking)
-		if len(entityIDs) > 0 {
-			merged, flagged, dedupErr := kgStore.DedupAfterExtraction(ctx, agentID, userID, entityIDs)
-			if dedupErr != nil {
-				slog.Warn("kg extract: dedup failed", "agent", agentID, "error", dedupErr)
-			} else if merged > 0 || flagged > 0 {
-				slog.Info("kg extract: dedup completed", "agent", agentID, "auto_merged", merged, "candidates_flagged", flagged)
-			}
-		}
-	}
-}

@@ -27,7 +27,7 @@ func wireHTTP(stores *store.Stores, defaultWorkspace, dataDir, bundledSkillsDir 
 			summoner = httpapi.NewAgentSummoner(stores.Agents, providerReg, msgBus)
 		}
 		agentsH = httpapi.NewAgentsHandler(stores.Agents, stores.Providers, providerReg, stores.DB, stores.Tracing, defaultWorkspace, msgBus, summoner, isOwner)
-		agentsH.SetImportStores(stores.Memory, stores.KnowledgeGraph)
+		agentsH.SetImportStores(stores.Memory, nil)
 		agentsH.SetDataDir(dataDir)
 	}
 
@@ -55,7 +55,7 @@ func wireHTTP(stores *store.Stores, defaultWorkspace, dataDir, bundledSkillsDir 
 	}
 
 	if stores != nil && stores.ChannelInstances != nil {
-		channelInstancesH = httpapi.NewChannelInstancesHandler(stores.ChannelInstances, stores.Agents, stores.ConfigPermissions, stores.Contacts, stores.Tenants, msgBus)
+		channelInstancesH = httpapi.NewChannelInstancesHandler(stores.ChannelInstances, stores.Agents, stores.ConfigPermissions, nil, stores.Tenants, msgBus)
 	}
 
 	if stores != nil && stores.Providers != nil {

@@ -7,13 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/nextlevelbuilder/goclaw/internal/bus"
-	"github.com/nextlevelbuilder/goclaw/internal/cache"
-	"github.com/nextlevelbuilder/goclaw/internal/channels"
-	"github.com/nextlevelbuilder/goclaw/internal/config"
 	"github.com/nextlevelbuilder/goclaw/internal/edition"
-	"github.com/nextlevelbuilder/goclaw/internal/heartbeat"
-	"github.com/nextlevelbuilder/goclaw/internal/sandbox"
 	"github.com/nextlevelbuilder/goclaw/internal/scheduler"
 	"github.com/nextlevelbuilder/goclaw/internal/store"
 	"github.com/nextlevelbuilder/goclaw/internal/tasks"
@@ -23,16 +17,10 @@ import (
 
 // lifecycleDeps bundles the extra parameters needed by runLifecycle that are not in gatewayDeps.
 type lifecycleDeps struct {
-	sched           *scheduler.Scheduler
-	heartbeatTicker interface{} // *heartbeat.Ticker - removed in v3.x
-	quotaChecker    interface{} // *channels.QuotaChecker - removed in v3.x
-	webFetchTool    *tools.WebFetchTool
-	// TTS removed in v3.x
-	sandboxMgr        sandbox.Manager
+	sched             *scheduler.Scheduler
 	postTurn          tools.PostTurnProcessor
 	subagentMgr       *tools.SubagentManager
 	consumerTeamStore store.TeamStore
-	auditCh           chan bus.AuditEventPayload
 	sigCh             chan os.Signal
 }
 
@@ -44,90 +32,11 @@ func (d *gatewayDeps) runLifecycle(
 	cancel context.CancelFunc,
 	deps lifecycleDeps,
 ) {
-	// Reload quota config on config changes via pub/sub.
-	if deps.quotaChecker != nil {
-		d.msgBus.Subscribe("quota-config-reload", func(evt bus.Event) {
-			if evt.Name != bus.TopicConfigChanged {
-				return
-			}
-			updatedCfg, ok := evt.Payload.(*config.Config)
-			if !ok || updatedCfg.Gateway.Quota == nil {
-				return
-			}
-			config.MergeChannelGroupQuotas(updatedCfg)
-			deps.quotaChecker.UpdateConfig(*updatedCfg.Gateway.Quota)
-			slog.Info("quota config reloaded via pub/sub")
-		})
-	}
-
-	// Reload cron default timezone on config changes via pub/sub.
-	d.msgBus.Subscribe("cron-config-reload", func(evt bus.Event) {
-		if evt.Name != bus.TopicConfigChanged {
-			return
-		}
-		updatedCfg, ok := evt.Payload.(*config.Config)
-		if !ok {
-			return
-		}
-		d.pgStores.Cron.SetDefaultTimezone(updatedCfg.Cron.DefaultTimezone)
-	})
-
-	// Reload web_fetch domain policy on config changes via pub/sub.
-	d.msgBus.Subscribe("webfetch-config-reload", func(evt bus.Event) {
-		if evt.Name != bus.TopicConfigChanged {
-			return
-		}
-		updatedCfg, ok := evt.Payload.(*config.Config)
-		if !ok {
-			return
-		}
-		deps.webFetchTool.UpdatePolicy(updatedCfg.Tools.WebFetch.Policy, updatedCfg.Tools.WebFetch.AllowedDomains, updatedCfg.Tools.WebFetch.BlockedDomains)
-	})
-
-	// Reload TTS providers on config changes via pub/sub.
-	d.msgBus.Subscribe("tts-config-reload", func(evt bus.Event) {
-		if evt.Name != bus.TopicConfigChanged {
-			return
-		}
-		updatedCfg, ok := evt.Payload.(*config.Config)
-		if !ok {
-			return
-		}
-		if d.pgStores.ConfigSecrets != nil {
-			// Use master tenant context to load global TTS secrets
-			masterCtx := store.WithTenantID(context.Background(), store.MasterTenantID)
-			if secrets, err := d.pgStores.ConfigSecrets.GetAll(masterCtx); err == nil && len(secrets) > 0 {
-				updatedCfg.ApplyDBSecrets(secrets)
-			}
-		}
-		// TTS removed in v3.x
-	})
-
-	// Note: vault enrichment provider is resolved per-tenant at runtime,
-	// no hot-reload handler needed here
-
-	// Log orphaned providers on agent deletion. Auto-delete is unsafe because
-	// providers can be referenced by heartbeats (FK), OAuth tokens, media chains.
-	d.msgBus.Subscribe("agent-deleted-provider-log", func(evt bus.Event) {
-		if evt.Name != bus.TopicAgentDeleted {
-			return
-		}
-		payload, ok := evt.Payload.(bus.AgentDeletedPayload)
-		if !ok || payload.Provider == "" {
-			return
-		}
-		slog.Info("agent deleted, provider may be orphaned — verify via UI",
-			"agent", payload.AgentKey, "provider", payload.Provider)
-	})
 
 	// Contact collector: auto-collect user info from channels with in-memory dedup cache.
 	var contactCollector *store.ContactCollector
-	if d.pgStores.Contacts != nil {
-		contactCollector = store.NewContactCollector(d.pgStores.Contacts, cache.NewInMemoryCache[bool]())
-		d.channelMgr.SetContactCollector(contactCollector)
-	}
 
-	go consumeInboundMessages(ctx, d.msgBus, d.agentRouter, d.cfg, deps.sched, d.channelMgr, deps.consumerTeamStore, deps.quotaChecker, d.pgStores.Sessions, d.pgStores.Agents, contactCollector, deps.postTurn, deps.subagentMgr)
+	go consumeInboundMessages(ctx, d.msgBus, d.agentRouter, d.cfg, deps.sched, d.channelMgr, deps.consumerTeamStore, nil, d.pgStores.Sessions, d.pgStores.Agents, contactCollector, deps.postTurn, deps.subagentMgr)
 
 	// Task recovery ticker: re-dispatches stale/pending team tasks on startup and periodically.
 	var taskTicker *tasks.TaskTicker
@@ -144,16 +53,8 @@ func (d *gatewayDeps) runLifecycle(
 		d.server.BroadcastEvent(*protocol.NewEvent(protocol.EventShutdown, nil))
 
 		// Stop channels, cron, heartbeat, and task ticker
-		d.channelMgr.StopAll(context.Background())
-		d.pgStores.Cron.Stop()
-		deps.heartbeatTicker.Stop()
 		if taskTicker != nil {
 			taskTicker.Stop()
-		}
-
-		// Drain audit log queue before closing DB
-		if deps.auditCh != nil {
-			close(deps.auditCh)
 		}
 
 		// Close provider resources (e.g. Claude CLI temp files)
@@ -163,14 +64,6 @@ func (d *gatewayDeps) runLifecycle(
 		if d.permCache != nil {
 			d.permCache.Close()
 		}
-
-		// Stop sandbox pruning + release containers
-		if deps.sandboxMgr != nil {
-			deps.sandboxMgr.Stop()
-			slog.Info("releasing sandbox containers...")
-			deps.sandboxMgr.ReleaseAll(context.Background())
-		}
-
 		if deps.sched != nil {
 			slog.Info("gateway: draining active runs", "timeout", "5s")
 			deps.sched.Stop() // MarkDraining + StopAll
@@ -192,13 +85,6 @@ func (d *gatewayDeps) runLifecycle(
 	// so the same routes are served on both the main listener and Tailscale.
 	// Compiled via build tags: `go build -tags tsnet` to enable.
 	mux := d.server.BuildMux()
-
-	// Mount channel webhook handlers on the main mux (e.g. Feishu /feishu/events).
-	// This allows webhook-based channels to share the main server port.
-	for _, route := range d.channelMgr.WebhookHandlers() {
-		mux.Handle(route.Path, route.Handler)
-		slog.Info("webhook route mounted on gateway", "path", route.Path)
-	}
 
 	tsCleanup := initTailscale(ctx, d.cfg, mux)
 	if tsCleanup != nil {

@@ -2,15 +2,12 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log/slog"
 	"strings"
 	"sync"
 	"time"
 	"unicode/utf8"
-
-	"github.com/google/uuid"
 
 	"github.com/nextlevelbuilder/goclaw/internal/agent"
 	"github.com/nextlevelbuilder/goclaw/internal/bus"
@@ -119,9 +116,6 @@ func consumeInboundMessages(ctx context.Context, msgBus *bus.MessageBus, agents 
 			}
 		}
 
-		if handleTeammateMessage(ctx, msg, deps) {
-			continue
-		}
 		if handleResetCommand(msg, deps) {
 			continue
 		}
@@ -138,71 +132,6 @@ func consumeInboundMessages(ctx context.Context, msgBus *bus.MessageBus, agents 
 		// --- Normal messages: route through debouncer ---
 		debouncer.Push(msg)
 	}
-}
-
-// autoSetFollowup sets followup reminders on in_progress tasks when the lead agent
-// replies on a real channel. Only sets followup if the task doesn't already have one
-// (respects LLM-initiated ask_user). Fire-and-forget, logs errors.
-func autoSetFollowup(ctx context.Context, teamStore store.TeamStore, agentStore store.AgentStore, agentKey, channel, chatID, content string) {
-	if agentStore == nil {
-		return
-	}
-	// Caller (processNormalMessage) already injected tenant_id into ctx.
-	// agentKey may be a slug ("default") or a UUID string (from WS clients).
-	var ag *store.AgentData
-	var err error
-	if id, parseErr := uuid.Parse(agentKey); parseErr == nil {
-		ag, err = agentStore.GetByID(ctx, id)
-	} else {
-		ag, err = agentStore.GetByKey(ctx, agentKey)
-	}
-	if err != nil || ag == nil {
-		return
-	}
-	team, err := teamStore.GetTeamForAgent(ctx, ag.ID)
-	if err != nil || team == nil || team.LeadAgentID != ag.ID {
-		return // only lead agent triggers auto-set
-	}
-	// Skip auto-followup when lead is waiting for teammates (not user).
-	if hasMember, _ := teamStore.HasActiveMemberTasks(ctx, team.ID, ag.ID); hasMember {
-		slog.Debug("auto-followup: skipping, active member tasks exist", "team_id", team.ID)
-		return
-	}
-
-	interval, max := parseFollowupSettings(team)
-	followupAt := time.Now().Add(interval)
-	msg := truncateForReminder(content, 200)
-
-	n, err := teamStore.SetFollowupForActiveTasks(ctx, team.ID, channel, chatID, followupAt, max, msg)
-	if err != nil {
-		slog.Warn("auto-set followup failed", "channel", channel, "chat_id", chatID, "error", err)
-	} else if n > 0 {
-		slog.Info("auto-set followup: set", "channel", channel, "chat_id", chatID, "count", n, "followup_at", followupAt)
-	}
-}
-
-// parseFollowupSettings extracts followup interval and max reminders from team settings.
-func parseFollowupSettings(team *store.TeamData) (time.Duration, int) {
-	const (
-		defaultIntervalMins = 30
-		defaultMax          = 0 // unlimited
-	)
-	if team.Settings == nil {
-		return time.Duration(defaultIntervalMins) * time.Minute, defaultMax
-	}
-	var settings map[string]any
-	if json.Unmarshal(team.Settings, &settings) != nil {
-		return time.Duration(defaultIntervalMins) * time.Minute, defaultMax
-	}
-	interval := defaultIntervalMins
-	if v, ok := settings["followup_interval_minutes"].(float64); ok && v > 0 {
-		interval = int(v)
-	}
-	max := defaultMax
-	if v, ok := settings["followup_max_reminders"].(float64); ok && v >= 0 {
-		max = int(v)
-	}
-	return time.Duration(interval) * time.Minute, max
 }
 
 // truncateForReminder truncates content to maxLen chars, taking the last line as context.

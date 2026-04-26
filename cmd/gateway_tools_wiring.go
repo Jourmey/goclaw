@@ -31,14 +31,7 @@ func wireExtraTools(
 	// DateTime tool (precise time for cron scheduling, memory timestamps, etc.)
 	toolsReg.Register(tools.NewDateTimeTool())
 
-	// Cron tool (agent-facing)
-	toolsReg.Register(tools.NewCronTool(pgStores.Cron))
-	slog.Info("cron tool registered")
-
 	// Heartbeat tool (agent-facing)
-	heartbeatTool = tools.NewHeartbeatTool(pgStores.Heartbeats, pgStores.ConfigPermissions)
-	heartbeatTool.SetAgentStore(pgStores.Agents)
-	toolsReg.Register(heartbeatTool)
 	slog.Info("heartbeat tool registered")
 
 	// Session tools (list, status, history, send)
@@ -51,8 +44,6 @@ func wireExtraTools(
 	toolsReg.Register(tools.NewMessageTool(workspace, agentCfg.RestrictToWorkspace))
 	// Send file tool (deliver existing workspace file as attachment)
 	toolsReg.Register(tools.NewSendFileTool(workspace, agentCfg.RestrictToWorkspace))
-	// Group members tool (list members in group chats)
-	toolsReg.Register(tools.NewListGroupMembersTool())
 	slog.Info("session + message + send_file tools registered")
 
 	// Register legacy tool aliases (backward-compat names from policy.go).
