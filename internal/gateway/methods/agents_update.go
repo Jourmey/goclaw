@@ -8,7 +8,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/nextlevelbuilder/goclaw/internal/audio"
 	"github.com/nextlevelbuilder/goclaw/internal/bootstrap"
 	"github.com/nextlevelbuilder/goclaw/internal/config"
 	"github.com/nextlevelbuilder/goclaw/internal/gateway"
@@ -42,7 +41,6 @@ func (m *AgentsMethods) handleUpdate(ctx context.Context, client *gateway.Client
 		MemoryConfig     json.RawMessage `json:"memory_config,omitempty"`
 		CompactionConfig json.RawMessage `json:"compaction_config,omitempty"`
 		ContextPruning   json.RawMessage `json:"context_pruning,omitempty"`
-		OtherConfig      json.RawMessage `json:"other_config,omitempty"`
 		// Promoted config fields
 		Emoji               *string         `json:"emoji,omitempty"`
 		AgentDescription    *string         `json:"agent_description,omitempty"`
@@ -125,27 +123,6 @@ func (m *AgentsMethods) handleUpdate(ctx context.Context, client *gateway.Client
 		}
 		if len(params.ContextPruning) > 0 {
 			updates["context_pruning"] = []byte(params.ContextPruning)
-		}
-		if len(params.OtherConfig) > 0 {
-			// Validate v3 flag values (must be boolean) before persisting.
-			var otherMap map[string]any
-			if json.Unmarshal(params.OtherConfig, &otherMap) == nil {
-				if err := store.ValidateV3Flags(otherMap); err != nil {
-					client.SendResponse(protocol.NewErrorResponse(req.ID, protocol.ErrInvalidRequest, err.Error()))
-					return
-				}
-				// Finding #5: validate tts_params allow-list via shared audio validator
-				// (Action D: single source of truth in internal/audio).
-				if tp, ok := otherMap["tts_params"]; ok && tp != nil {
-					if tpMap, ok := tp.(map[string]any); ok {
-						if err := audio.ValidateAgentTTSParams(tpMap); err != nil {
-							client.SendResponse(protocol.NewErrorResponse(req.ID, protocol.ErrInvalidRequest, err.Error()))
-							return
-						}
-					}
-				}
-			}
-			updates["other_config"] = []byte(params.OtherConfig)
 		}
 		// Promoted config fields
 		if params.Emoji != nil {

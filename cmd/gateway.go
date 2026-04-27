@@ -366,20 +366,6 @@ func runGateway() {
 		mediaStore,
 	)
 
-	// System backup API — admin + owner only, SSE progress streaming.
-	server.SetBackupHandler(httpapi.NewBackupHandler(cfg, cfg.Database.PostgresDSN, Version, permPE.IsOwner))
-
-	// System restore API — admin + owner only, multipart upload + SSE progress.
-	server.SetRestoreHandler(httpapi.NewRestoreHandler(cfg, cfg.Database.PostgresDSN, permPE.IsOwner))
-
-	// S3 backup integration — admin + owner only.
-	server.SetBackupS3Handler(httpapi.NewBackupS3Handler(cfg, cfg.Database.PostgresDSN, Version, pgStores.ConfigSecrets, permPE.IsOwner))
-
-	// Tenant-scoped backup/restore — owner or tenant admin.
-	if pgStores.Tenants != nil {
-		server.SetTenantBackupHandler(httpapi.NewTenantBackupHandler(pgStores.DB, cfg, pgStores.Tenants, Version, permPE.IsOwner))
-	}
-
 	// Register all RPC methods
 	server.SetLogTee(logTee)
 	_, chatMethods, cfgPermsMethods := registerAllMethods(server, agentRouter, pgStores.Sessions, pgStores.Cron, pgStores.Pairing, cfg, cfgPath, workspace, dataDir, msgBus, execApprovalMgr, pgStores.Agents, pgStores.Skills, pgStores.ConfigSecrets, pgStores.Teams, contextFileInterceptor, logTee, pgStores.Heartbeats, pgStores.ConfigPermissions, pgStores.SystemConfigs, pgStores.Tenants, pgStores.SkillTenantCfgs)
