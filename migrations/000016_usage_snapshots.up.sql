@@ -2,10 +2,9 @@
 -- Part 1: New indexes on EXISTING tables (optimize aggregation)
 -- ============================================================
 
--- Traces: snapshot worker scans by start_time for root traces only
+-- Traces: snapshot worker scans by start_time
 -- Replaces Seq Scan (2.5ms→0.1ms at current scale, critical at 100K+ rows)
-CREATE INDEX IF NOT EXISTS idx_traces_start_root ON traces (start_time DESC)
-    WHERE parent_trace_id IS NULL;
+CREATE INDEX IF NOT EXISTS idx_traces_start_root ON traces (start_time DESC);
 
 -- Spans: snapshot worker joins on trace_id filtering by span_type
 -- Current idx_spans_trace is (trace_id, start_time) — start_time useless here

@@ -13,8 +13,6 @@ ALTER TABLE skills ADD CONSTRAINT skills_slug_key UNIQUE (slug);
 DROP INDEX IF EXISTS idx_mcp_servers_tenant_name;
 ALTER TABLE mcp_servers ADD CONSTRAINT mcp_servers_name_key UNIQUE (name);
 
-DROP INDEX IF EXISTS idx_channel_contacts_tenant_type_sender;
-ALTER TABLE channel_contacts ADD CONSTRAINT channel_contacts_channel_type_sender_id_key UNIQUE (channel_type, sender_id);
 
 -- Restore llm_providers global UNIQUE(name)
 DROP INDEX IF EXISTS idx_llm_providers_tenant_name;
@@ -60,7 +58,6 @@ ALTER TABLE agent_context_files DROP COLUMN IF EXISTS tenant_id;
 ALTER TABLE secure_cli_binaries DROP COLUMN IF EXISTS tenant_id;
 ALTER TABLE config_secrets DROP COLUMN IF EXISTS tenant_id;
 ALTER TABLE llm_providers DROP COLUMN IF EXISTS tenant_id;
-ALTER TABLE channel_contacts DROP COLUMN IF EXISTS tenant_id;
 ALTER TABLE channel_pending_messages DROP COLUMN IF EXISTS tenant_id;
 ALTER TABLE paired_devices DROP COLUMN IF EXISTS tenant_id;
 ALTER TABLE pairing_requests DROP COLUMN IF EXISTS tenant_id;

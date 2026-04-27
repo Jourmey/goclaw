@@ -5,7 +5,7 @@
 -- Phase A: Create tenants + tenant_users tables
 -- ============================================================
 
-CREATE TABLE tenants (
+CREATE TABLE IF NOT EXISTS tenants (
     id         UUID PRIMARY KEY,
     name       VARCHAR(255) NOT NULL,
     slug       VARCHAR(100) NOT NULL UNIQUE,
@@ -53,15 +53,11 @@ ALTER TABLE agent_shares ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-70
 ALTER TABLE user_context_files ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 ALTER TABLE user_agent_profiles ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 ALTER TABLE user_agent_overrides ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
-ALTER TABLE agent_config_permissions ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
-ALTER TABLE agent_links ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 ALTER TABLE channel_instances ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 
 -- Memory + KG
 ALTER TABLE memory_documents ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 ALTER TABLE memory_chunks ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
-ALTER TABLE kg_entities ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
-ALTER TABLE kg_relations ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 
 -- Skills
 ALTER TABLE skills ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
@@ -72,7 +68,6 @@ ALTER TABLE cron_jobs ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-
 
 -- Tracing + Activity
 ALTER TABLE traces ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
-ALTER TABLE activity_logs ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 ALTER TABLE usage_snapshots ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 
 -- MCP
@@ -81,21 +76,16 @@ ALTER TABLE mcp_user_grants ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0
 ALTER TABLE mcp_access_requests ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 
 -- Teams
-ALTER TABLE agent_teams ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
-ALTER TABLE team_user_grants ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 
 -- Pairing + Channels
 ALTER TABLE pairing_requests ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 ALTER TABLE paired_devices ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
-ALTER TABLE channel_pending_messages ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
-ALTER TABLE channel_contacts ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 
 -- LLM Providers + Config Secrets
 ALTER TABLE llm_providers ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 ALTER TABLE config_secrets ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 
 -- Other
-ALTER TABLE secure_cli_binaries ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 
 -- Grant tables
 ALTER TABLE agent_context_files ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
@@ -103,17 +93,12 @@ ALTER TABLE skill_agent_grants ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a
 ALTER TABLE mcp_agent_grants ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 
 -- Tasks + Tracing
-ALTER TABLE team_tasks ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 ALTER TABLE spans ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 
 -- Cache
 ALTER TABLE embedding_cache ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 
 -- Team activity tables
-ALTER TABLE agent_team_members ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
-ALTER TABLE team_task_comments ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
-ALTER TABLE team_task_events ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
-ALTER TABLE team_task_attachments ADD COLUMN tenant_id UUID NOT NULL DEFAULT '0193a5b0-7000-7000-8000-000000000001' REFERENCES tenants(id);
 
 -- ============================================================
 -- Phase C: Drop defaults (force explicit tenant_id for new rows)
@@ -126,41 +111,26 @@ ALTER TABLE agent_shares ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE user_context_files ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE user_agent_profiles ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE user_agent_overrides ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE agent_config_permissions ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE agent_links ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE channel_instances ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE memory_documents ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE memory_chunks ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE kg_entities ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE kg_relations ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE skills ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE skill_user_grants ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE cron_jobs ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE traces ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE activity_logs ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE usage_snapshots ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE mcp_servers ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE mcp_user_grants ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE mcp_access_requests ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE agent_teams ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE team_user_grants ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE pairing_requests ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE paired_devices ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE channel_pending_messages ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE channel_contacts ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE llm_providers ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE config_secrets ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE secure_cli_binaries ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE agent_context_files ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE skill_agent_grants ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE mcp_agent_grants ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE team_tasks ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE spans ALTER COLUMN tenant_id DROP DEFAULT;
 ALTER TABLE embedding_cache ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE agent_team_members ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE team_task_comments ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE team_task_events ALTER COLUMN tenant_id DROP DEFAULT;
-ALTER TABLE team_task_attachments ALTER COLUMN tenant_id DROP DEFAULT;
 
 -- ============================================================
 -- Phase D: Indexes
@@ -174,41 +144,26 @@ CREATE INDEX idx_agent_shares_tenant ON agent_shares(tenant_id);
 CREATE INDEX idx_user_context_files_tenant ON user_context_files(tenant_id);
 CREATE INDEX idx_user_agent_profiles_tenant ON user_agent_profiles(tenant_id);
 CREATE INDEX idx_user_agent_overrides_tenant ON user_agent_overrides(tenant_id);
-CREATE INDEX idx_agent_config_permissions_tenant ON agent_config_permissions(tenant_id);
-CREATE INDEX idx_agent_links_tenant ON agent_links(tenant_id);
 CREATE INDEX idx_channel_instances_tenant ON channel_instances(tenant_id);
 CREATE INDEX idx_memory_documents_tenant ON memory_documents(tenant_id);
 CREATE INDEX idx_memory_chunks_tenant ON memory_chunks(tenant_id);
-CREATE INDEX idx_kg_entities_tenant ON kg_entities(tenant_id);
-CREATE INDEX idx_kg_relations_tenant ON kg_relations(tenant_id);
 CREATE INDEX idx_skills_tenant ON skills(tenant_id);
 CREATE INDEX idx_skill_user_grants_tenant ON skill_user_grants(tenant_id);
 CREATE INDEX idx_cron_jobs_tenant ON cron_jobs(tenant_id);
 CREATE INDEX idx_traces_tenant ON traces(tenant_id);
-CREATE INDEX idx_activity_logs_tenant ON activity_logs(tenant_id);
 CREATE INDEX idx_usage_snapshots_tenant ON usage_snapshots(tenant_id);
 CREATE INDEX idx_mcp_servers_tenant ON mcp_servers(tenant_id);
 CREATE INDEX idx_mcp_user_grants_tenant ON mcp_user_grants(tenant_id);
 CREATE INDEX idx_mcp_access_requests_tenant ON mcp_access_requests(tenant_id);
-CREATE INDEX idx_agent_teams_tenant ON agent_teams(tenant_id);
-CREATE INDEX idx_team_user_grants_tenant ON team_user_grants(tenant_id);
 CREATE INDEX idx_pairing_requests_tenant ON pairing_requests(tenant_id);
 CREATE INDEX idx_paired_devices_tenant ON paired_devices(tenant_id);
-CREATE INDEX idx_channel_pending_messages_tenant ON channel_pending_messages(tenant_id);
-CREATE INDEX idx_channel_contacts_tenant ON channel_contacts(tenant_id);
 CREATE INDEX idx_llm_providers_tenant ON llm_providers(tenant_id);
 CREATE INDEX idx_config_secrets_tenant ON config_secrets(tenant_id);
-CREATE INDEX idx_secure_cli_binaries_tenant ON secure_cli_binaries(tenant_id);
 CREATE INDEX idx_agent_context_files_tenant ON agent_context_files(tenant_id);
 CREATE INDEX idx_skill_agent_grants_tenant ON skill_agent_grants(tenant_id);
 CREATE INDEX idx_mcp_agent_grants_tenant ON mcp_agent_grants(tenant_id);
-CREATE INDEX idx_team_tasks_tenant ON team_tasks(tenant_id);
 CREATE INDEX idx_spans_tenant ON spans(tenant_id);
 CREATE INDEX idx_embedding_cache_tenant ON embedding_cache(tenant_id);
-CREATE INDEX idx_agent_team_members_tenant ON agent_team_members(tenant_id);
-CREATE INDEX idx_team_task_comments_tenant ON team_task_comments(tenant_id);
-CREATE INDEX idx_team_task_events_tenant ON team_task_events(tenant_id);
-CREATE INDEX idx_team_task_attachments_tenant ON team_task_attachments(tenant_id);
 
 -- Composite indexes for Plan 3 query performance
 CREATE INDEX idx_agents_tenant_active ON agents(tenant_id) WHERE deleted_at IS NULL;
@@ -306,10 +261,6 @@ ALTER TABLE mcp_servers DROP CONSTRAINT IF EXISTS mcp_servers_name_key;
 DROP INDEX IF EXISTS mcp_servers_name_key;
 CREATE UNIQUE INDEX idx_mcp_servers_tenant_name ON mcp_servers(tenant_id, name);
 
--- channel_contacts: (channel_type, sender_id) → (tenant_id, channel_type, sender_id)
-ALTER TABLE channel_contacts DROP CONSTRAINT IF EXISTS channel_contacts_channel_type_sender_id_key;
-DROP INDEX IF EXISTS channel_contacts_channel_type_sender_id_key;
-CREATE UNIQUE INDEX idx_channel_contacts_tenant_type_sender ON channel_contacts(tenant_id, channel_type, sender_id);
 
 -- llm_providers.name: globally unique → (tenant_id, name)
 ALTER TABLE llm_providers DROP CONSTRAINT IF EXISTS llm_providers_name_key;
@@ -350,9 +301,5 @@ WHERE messages::text LIKE '%?token=%';
 -- Phase K: Migrate remaining UUID v4 defaults to v7
 -- ============================================================
 
-ALTER TABLE kg_entities          ALTER COLUMN id SET DEFAULT uuid_generate_v7();
-ALTER TABLE kg_relations         ALTER COLUMN id SET DEFAULT uuid_generate_v7();
-ALTER TABLE channel_contacts     ALTER COLUMN id SET DEFAULT uuid_generate_v7();
-ALTER TABLE team_user_grants     ALTER COLUMN id SET DEFAULT uuid_generate_v7();
 ALTER TABLE tenant_users         ALTER COLUMN id SET DEFAULT uuid_generate_v7();
 ALTER TABLE mcp_user_credentials ALTER COLUMN id SET DEFAULT uuid_generate_v7();

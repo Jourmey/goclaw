@@ -179,8 +179,7 @@ func (h *UsageHandler) queryLiveHour(r *http.Request, from, to time.Time, q stor
 		COALESCE(SUM(tool_call_count), 0),
 		COALESCE(AVG(duration_ms), 0)::INTEGER
 	FROM traces
-	WHERE start_time >= $1 AND start_time < $2
-	  AND parent_trace_id IS NULL`
+	WHERE start_time >= $1 AND start_time < $2`
 
 	args := []any{from, to}
 	idx := 3

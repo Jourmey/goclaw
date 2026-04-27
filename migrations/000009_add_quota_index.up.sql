@@ -1,5 +1,4 @@
--- Partial index for quota checker: efficiently counts top-level traces per user in time windows.
--- Eliminates parent_trace_id IS NULL post-filter (89% of traces are top-level).
+-- Partial index for quota checker: efficiently counts traces per user in time windows.
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_traces_quota
 ON traces (user_id, created_at DESC)
-WHERE parent_trace_id IS NULL AND user_id IS NOT NULL;
+WHERE user_id IS NOT NULL;
