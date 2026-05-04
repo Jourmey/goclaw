@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+﻿import { Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface SetupStepperProps {

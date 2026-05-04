@@ -10,8 +10,6 @@ import { AgentOverviewTab } from "./agent-overview-tab";
 import { AgentFilesTab } from "./agent-files-tab";
 import { AgentInstancesTab } from "./agent-instances-tab";
 import { AgentPermissionsTab } from "./agent-permissions-tab";
-import { AgentEvolutionTab } from "./evolution-tab/agent-evolution-tab";
-// import { AgentHooksTab } from "./agent-hooks-tab";
 import { SummoningModal } from "../summoning-modal";
 import { ConfirmDeleteDialog } from "@/components/shared/confirm-delete-dialog";
 import { DetailPageSkeleton } from "@/components/shared/loading-skeleton";
@@ -20,9 +18,6 @@ import { SystemPromptDialog } from "./system-prompt-dialog";
 
 const AgentAdvancedDialog = lazy(() =>
   import("./agent-advanced-dialog").then((m) => ({ default: m.AgentAdvancedDialog }))
-);
-const HeartbeatConfigDialog = lazy(() =>
-  import("./heartbeat-config-dialog").then((m) => ({ default: m.HeartbeatConfigDialog }))
 );
 
 interface AgentDetailPageProps {
@@ -41,9 +36,7 @@ export function AgentDetailPage({ agentId, onBack }: AgentDetailPageProps) {
   const [activeTab, setActiveTab] = useState("agent");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
-  const [heartbeatOpen, setHeartbeatOpen] = useState(false);
   const [promptOpen, setPromptOpen] = useState(false);
-  // const [hooksCreateOpen, setHooksCreateOpen] = useState(false);
 
   const handleResummon = async () => {
     await resummonAgent();
@@ -69,7 +62,7 @@ export function AgentDetailPage({ agentId, onBack }: AgentDetailPageProps) {
         onBack={onBack}
         onDelete={() => setDeleteOpen(true)}
         onAdvanced={() => setAdvancedOpen(true)}
-        onHeartbeat={() => setHeartbeatOpen(true)}
+        onHeartbeat={() => {}}
         onSystemPrompt={() => setPromptOpen(true)}
       />
 
@@ -80,7 +73,7 @@ export function AgentDetailPage({ agentId, onBack }: AgentDetailPageProps) {
               <TabsTrigger value="agent">{t("detail.tabs.agent")}</TabsTrigger>
               <TabsTrigger value="files">{t("detail.tabs.files")}</TabsTrigger>
               <TabsTrigger value="permissions">{t("detail.tabs.permissions")}</TabsTrigger>
-              <TabsTrigger value="evolution">{t("detail.tabs.evolution")}</TabsTrigger>
+              {/* <TabsTrigger value="evolution">{t("detail.tabs.evolution")}</TabsTrigger> */}
               {/* <TabsTrigger value="hooks">{t("detail.tabs.hooks")}</TabsTrigger> */}
               {agent.agent_type === "predefined" && (
                 <TabsTrigger value="instances">{t("detail.tabs.instances")}</TabsTrigger>
@@ -115,12 +108,12 @@ export function AgentDetailPage({ agentId, onBack }: AgentDetailPageProps) {
               <AgentPermissionsTab agentId={agentId} />
             </TabsContent>
 
-            <TabsContent value="evolution" className="mt-4">
+            {/* <TabsContent value="evolution" className="mt-4">
               <AgentEvolutionTab
                 agentId={agentId}
                 agentOtherConfig={agent.other_config as Record<string, unknown> | undefined}
               />
-            </TabsContent>
+            </TabsContent> */}
 
             {/* <TabsContent value="hooks" className="mt-4">
               <AgentHooksTab
@@ -161,7 +154,7 @@ export function AgentDetailPage({ agentId, onBack }: AgentDetailPageProps) {
         onCancel={cancelSummonAgent}
       />
 
-      {heartbeatOpen && (
+      {/* heartbeatOpen && (
         <Suspense fallback={null}>
           <HeartbeatConfigDialog
             open={heartbeatOpen}
@@ -178,7 +171,7 @@ export function AgentDetailPage({ agentId, onBack }: AgentDetailPageProps) {
             agentModel={agent?.model}
           />
         </Suspense>
-      )}
+      ) */}
 
       {promptOpen && (
         <SystemPromptDialog

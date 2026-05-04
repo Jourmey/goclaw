@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+﻿import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,16 +48,16 @@ export function StepChannel({ agent, onComplete, onSkip, onBack }: StepChannelPr
     setError("");
   };
 
-  const handleCredsChange = useCallback((key: string, value: any) => {
+  const handleCredsChange = useCallback((key: string, value: unknown) => {
     setCredsValues((prev) => ({ ...prev, [key]: value }));
   }, []);
 
   const handleCreate = async () => {
     if (!agent) { setError(t("channel.errors.noAgent")); return; }
 
-    const missing = credsFields.filter((f: any) => f.required && !credsValues[f.key]);
+    const missing = credsFields.filter((f: { required?: boolean; key: string }) => f.required && !credsValues[f.key]);
     if (missing.length > 0) {
-      setError(t("channel.errors.requiredFields", { fields: missing.map((f: any) => f.label).join(", ") }));
+      setError(t("channel.errors.requiredFields", { fields: missing.map((f: { label: string }) => f.label).join(", ") }));
       return;
     }
 

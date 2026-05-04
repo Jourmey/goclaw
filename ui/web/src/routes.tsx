@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router";
 import { AppLayout } from "@/components/layout/app-layout";
 import { RequireAuth } from "@/components/shared/require-auth";
-import { RequireAdmin } from "@/components/shared/require-role";
 import { RequireSetup } from "@/components/shared/require-setup";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { ROUTES } from "@/lib/constants";
@@ -27,9 +26,6 @@ const ChatPage = lazyWithRetry(() =>
 const AgentsPage = lazyWithRetry(() =>
   import("@/pages/agents/agents-page").then((m) => ({ default: m.AgentsPage })),
 );
-const AgentCodexPoolPage = lazyWithRetry(() =>
-  import("@/pages/agents/agent-detail/agent-codex-pool-page").then((m) => ({ default: m.AgentCodexPoolPage })),
-);
 
 function PageLoader() {
   return (
@@ -44,10 +40,18 @@ export function AppRoutes() {
     <ErrorBoundary>
     <Suspense fallback={<PageLoader />}>
       <Routes>
+        {/* Public route - no auth required */}
         <Route path={ROUTES.LOGIN} element={<LoginPage />} />
-        <Route path={ROUTES.SELECT_TENANT} element={<TenantSelectorPage />} />
 
-        {/* Setup wizard — standalone layout, requires auth but no sidebar */}
+        {/* Auth-only routes - need login but bypass setup check */}
+        <Route
+          path={ROUTES.SELECT_TENANT}
+          element={
+            <RequireAuth>
+              <TenantSelectorPage />
+            </RequireAuth>
+          }
+        />
         <Route
           path={ROUTES.SETUP}
           element={
@@ -57,7 +61,7 @@ export function AppRoutes() {
           }
         />
 
-        {/* Main app — requires auth + setup complete */}
+        {/* Main app - full auth + setup required */}
         <Route
           element={
             <RequireAuth>
@@ -71,7 +75,6 @@ export function AppRoutes() {
           <Route path={ROUTES.OVERVIEW} element={<OverviewPage />} />
           <Route path={ROUTES.CHAT_PATTERN} element={<ChatPage />} />
           <Route path={ROUTES.AGENTS} element={<AgentsPage key="list" />} />
-          <Route path={ROUTES.AGENT_CODEX_POOL} element={<RequireAdmin><AgentCodexPoolPage /></RequireAdmin>} />
           <Route path={ROUTES.AGENT_DETAIL} element={<AgentsPage key="detail" />} />
         </Route>
 

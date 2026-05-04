@@ -17,7 +17,6 @@ import {
   buildAgentOtherConfigWithChatGPTOAuthRouting,
   normalizeChatGPTOAuthRouting,
 } from "./agent-display-utils";
-import { buildDraftRouting } from "./codex-pool-routing-draft-utils";
 import type { ProviderData } from "@/pages/providers/hooks/use-providers";
 
 const SIMPLE_REASONING_LEVELS = new Set(["off", "low", "medium", "high"]);
@@ -72,7 +71,6 @@ export function deriveState(
   const routing = normalizeChatGPTOAuthRouting(
     agent.chatgpt_oauth_routing ?? agent.other_config,
   );
-  const draftRouting = buildDraftRouting(routing);
 
   return {
     reasoningMode,
@@ -89,7 +87,7 @@ export function deriveState(
       (hasReasoningObject ||
         !SIMPLE_REASONING_LEVELS.has(reasoningEffort) ||
         reasoningFallback !== "downgrade"),
-    chatgptRouting: draftRouting,
+    chatgptRouting: routing as ChatGPTOAuthRoutingConfig,
     // Read workspace_sharing from top-level, fallback to other_config for transition
     wsSharing: (
       agent.workspace_sharing ??

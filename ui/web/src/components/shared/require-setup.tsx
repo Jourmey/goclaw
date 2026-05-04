@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Navigate } from "react-router";
 import { WifiOff, Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -38,18 +38,29 @@ function DisconnectedOverlay() {
 export function RequireSetup({ children }: { children: React.ReactNode }) {
   const { needsSetup, loading } = useBootstrapStatus();
   const connected = useAuthStore((s) => s.connected);
+  const token = useAuthStore((s) => s.token);
+  const userId = useAuthStore((s) => s.userId);
+  const senderID = useAuthStore((s) => s.senderID);
   const [timedOut, setTimedOut] = useState(false);
 
+  // Only require connection if user has valid credentials
+  const hasCredentials = (token || senderID) && userId;
+
   useEffect(() => {
+    if (!hasCredentials) {
+      setTimedOut(false);
+      return;
+    }
     if (connected) {
       setTimedOut(false);
       return;
     }
     const timer = setTimeout(() => setTimedOut(true), CONNECTION_TIMEOUT_MS);
     return () => clearTimeout(timer);
-  }, [connected]);
+  }, [connected, hasCredentials]);
 
-  if (!connected && timedOut) return <DisconnectedOverlay />;
+  // If user has credentials but can't connect, show disconnected overlay
+  if (hasCredentials && !connected && timedOut) return <DisconnectedOverlay />;
   if (loading) return <SetupLoader />;
   if (needsSetup) return <Navigate to={ROUTES.SETUP} replace />;
 

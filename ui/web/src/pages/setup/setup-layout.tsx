@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+﻿import { useTranslation } from "react-i18next";
 
 export function SetupLayout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation("setup");
