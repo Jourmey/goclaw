@@ -15,7 +15,6 @@ import enChannels from "./locales/en/channels.json";
 import enProviders from "./locales/en/providers.json";
 import enTools from "./locales/en/tools.json";
 import enSetup from "./locales/en/setup.json";
-import enSystemSettings from "./locales/en/system-settings.json";
 import enV3Capabilities from "./locales/en/v3-capabilities.json";
 import enHooks from "./locales/en/hooks.json";
 import enTts from "./locales/en/tts.json";
@@ -38,7 +37,6 @@ import viChannels from "./locales/vi/channels.json";
 import viProviders from "./locales/vi/providers.json";
 import viTools from "./locales/vi/tools.json";
 import viSetup from "./locales/vi/setup.json";
-import viSystemSettings from "./locales/vi/system-settings.json";
 import viV3Capabilities from "./locales/vi/v3-capabilities.json";
 import viHooks from "./locales/vi/hooks.json";
 import viTts from "./locales/vi/tts.json";
@@ -61,7 +59,6 @@ import zhChannels from "./locales/zh/channels.json";
 import zhProviders from "./locales/zh/providers.json";
 import zhTools from "./locales/zh/tools.json";
 import zhSetup from "./locales/zh/setup.json";
-import zhSystemSettings from "./locales/zh/system-settings.json";
 import zhV3Capabilities from "./locales/zh/v3-capabilities.json";
 import zhHooks from "./locales/zh/hooks.json";
 import zhTts from "./locales/zh/tts.json";
@@ -84,7 +81,7 @@ function getInitialLanguage(): string {
 const ns = [
   "common", "sidebar", "topbar", "login", "overview", "chat",
   "agents", "skills", "config", "channels", "providers", "tools",
-  "setup", "system-settings", "v3-capabilities", "hooks", "tts",
+  "setup", "v3-capabilities", "hooks", "tts",
   "traces", "cron", "usage", "packages",
 ] as const;
 
@@ -94,24 +91,21 @@ i18n.use(initReactI18next).init({
       common: enCommon, sidebar: enSidebar, topbar: enTopbar, login: enLogin,
       overview: enOverview, chat: enChat, agents: enAgents, skills: enSkills,
       config: enConfig, channels: enChannels, providers: enProviders, tools: enTools,
-      setup: enSetup, "system-settings": enSystemSettings,
-      "v3-capabilities": enV3Capabilities, hooks: enHooks, tts: enTts,
+      setup: enSetup, "v3-capabilities": enV3Capabilities, hooks: enHooks, tts: enTts,
       traces: enTraces, cron: enCron, usage: enUsage, packages: enPackages,
     },
     vi: {
       common: viCommon, sidebar: viSidebar, topbar: viTopbar, login: viLogin,
       overview: viOverview, chat: viChat, agents: viAgents, skills: viSkills,
       config: viConfig, channels: viChannels, providers: viProviders, tools: viTools,
-      setup: viSetup, "system-settings": viSystemSettings,
-      "v3-capabilities": viV3Capabilities, hooks: viHooks, tts: viTts,
+      setup: viSetup, "v3-capabilities": viV3Capabilities, hooks: viHooks, tts: viTts,
       traces: viTraces, cron: viCron, usage: viUsage, packages: viPackages,
     },
     zh: {
       common: zhCommon, sidebar: zhSidebar, topbar: zhTopbar, login: zhLogin,
       overview: zhOverview, chat: zhChat, agents: zhAgents, skills: zhSkills,
       config: zhConfig, channels: zhChannels, providers: zhProviders, tools: zhTools,
-      setup: zhSetup, "system-settings": zhSystemSettings,
-      "v3-capabilities": zhV3Capabilities, hooks: zhHooks, tts: zhTts,
+      setup: zhSetup, "v3-capabilities": zhV3Capabilities, hooks: zhHooks, tts: zhTts,
       traces: zhTraces, cron: zhCron, usage: zhUsage, packages: zhPackages,
     },
   },

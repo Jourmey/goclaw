@@ -1,11 +1,10 @@
-import { Moon, Sun, PanelLeftClose, PanelLeftOpen, Menu, LogOut, Globe, Clock, Building2, ChevronDown, Check, User, KeyRound, Info, Settings2 } from "lucide-react";
+import { Moon, Sun, PanelLeftClose, PanelLeftOpen, Menu, LogOut, Globe, Clock, Building2, ChevronDown, Check, User, KeyRound, Info } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { useUiStore } from "@/stores/use-ui-store";
 import { useAuthStore } from "@/stores/use-auth-store";
 import { useTenants } from "@/hooks/use-tenants";
 import { useIsMobile } from "@/hooks/use-media-query";
-import { useEmbeddingStatus } from "@/hooks/use-embedding-status";
 
 import { ROUTES, SUPPORTED_LANGUAGES, LANGUAGE_LABELS, TIMEZONE_OPTIONS, LOCAL_STORAGE_KEYS, type Language } from "@/lib/constants";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,14 +12,8 @@ import { Popover } from "radix-ui";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { AboutDialog } from "./about-dialog";
-import { SystemSettingsModal } from "./system-settings-modal";
 
-interface TopbarProps {
-  settingsOpen: boolean;
-  onSettingsOpenChange: (open: boolean) => void;
-}
-
-export function Topbar({ settingsOpen, onSettingsOpenChange }: TopbarProps) {
+export function Topbar() {
   const { t } = useTranslation("topbar");
   const theme = useUiStore((s) => s.theme);
   const setTheme = useUiStore((s) => s.setTheme);
@@ -33,10 +26,6 @@ export function Topbar({ settingsOpen, onSettingsOpenChange }: TopbarProps) {
   const setMobileSidebarOpen = useUiStore((s) => s.setMobileSidebarOpen);
   const isMobile = useIsMobile();
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  const { status: embStatus } = useEmbeddingStatus();
-  const setSettingsOpen = onSettingsOpenChange;
-  const role = useAuthStore((s) => s.role);
-  const isAdmin = role === "admin" || role === "owner";
 
   const handleSidebarToggle = isMobile
     ? () => setMobileSidebarOpen(true)
@@ -91,21 +80,6 @@ export function Topbar({ settingsOpen, onSettingsOpenChange }: TopbarProps) {
           </SelectContent>
         </Select>
 
-        {isAdmin && (
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="relative cursor-pointer rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-            title={t("systemSettings")}
-          >
-            <Settings2 className="h-4 w-4" />
-            <span
-              className={`absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full ${
-                embStatus?.configured ? "bg-emerald-500" : "bg-amber-500"
-              }`}
-            />
-          </button>
-        )}
-
         <button
           onClick={() => setTheme(isDark ? "light" : "dark")}
           className="cursor-pointer rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -116,8 +90,6 @@ export function Topbar({ settingsOpen, onSettingsOpenChange }: TopbarProps) {
 
         <UserMenu />
       </div>
-
-      <SystemSettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </header>
   );
 }
