@@ -200,7 +200,7 @@ export function AgentHooksTab({ agentId, initialCreateOpen, onCreateOpenChange }
             key={hook.id}
             hook={hook}
             onClick={() => setEditTarget(hook)}
-            onToggle={(enabled) => toggleMutation.mutate({ hookId: hook.id, enabled })}
+            onToggle={(enabled: boolean) => toggleMutation.mutate({ hookId: hook.id, enabled })}
             onEdit={() => setEditTarget(hook)}
             onDelete={() => setDeleteTarget(hook)}
             onTest={() => setTestTarget(hook)}
@@ -218,7 +218,7 @@ export function AgentHooksTab({ agentId, initialCreateOpen, onCreateOpenChange }
       {editTarget && (
         <HookFormDialog
           open
-          onOpenChange={(o) => { if (!o) setEditTarget(null); }}
+          onOpenChange={(o: boolean) => { if (!o) setEditTarget(null); }}
           onSubmit={handleUpdate}
           initial={editTarget}
         />

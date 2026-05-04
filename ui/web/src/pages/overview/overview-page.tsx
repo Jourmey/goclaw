@@ -1,4 +1,4 @@
-import { useEffect, useCallback, lazy, Suspense } from "react";
+import { useEffect, useCallback } from "react";
 import { Activity, Bot, DollarSign, Hash, Radio, AlertTriangle } from "lucide-react";
 import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -10,7 +10,7 @@ import { useAuthStore } from "@/stores/use-auth-store";
 import { useWsCall } from "@/hooks/use-ws-call";
 import { useWsEvent } from "@/hooks/use-ws-event";
 import { useProviders } from "@/pages/providers/hooks/use-providers";
-import { useTraces } from "@/pages/traces/hooks/use-traces";
+// import { useTraces } from "@/pages/traces/hooks/use-traces";
 import { Methods, Events } from "@/api/protocol";
 import { ROUTES } from "@/lib/constants";
 import { formatTokens, formatCost } from "@/lib/format";
@@ -30,19 +30,19 @@ import { ConnectedClientsCard } from "./connected-clients-card";
 import { CronJobsCard } from "./cron-jobs-card";
 import { RecentRequestsCard } from "./recent-requests-card";
 import { QuotaUsageCard } from "./quota-usage-card";
-import { useRuntimes } from "@/pages/skills/hooks/use-runtimes";
-import {
-  getChannelAttentionPriority,
-  getChannelStatusFallback,
-} from "@/pages/channels/channels-status-view";
-import { useChannelInstances } from "@/pages/channels/hooks/use-channel-instances";
+// import { useRuntimes } from "@/pages/skills/hooks/use-runtimes";
+// import {
+//   getChannelAttentionPriority,
+//   getChannelStatusFallback,
+// } from "@/pages/channels/channels-status-view";
+// import { useChannelInstances } from "@/pages/channels/hooks/use-channel-instances";
 
-const UsagePage = lazy(() =>
-  import("@/pages/usage/usage-page").then((m) => ({ default: m.UsagePage })),
-);
+// const UsagePage = lazy(() =>
+//   import("@/pages/usage/usage-page").then((m) => ({ default: m.UsagePage })),
+// );
 
 const REFRESH_INTERVAL = 30_000;
-const MAX_OVERVIEW_CHANNEL_INSTANCES = 200;
+// const MAX_OVERVIEW_CHANNEL_INSTANCES = 200;
 
 export function OverviewPage() {
   const { t } = useTranslation("overview");
@@ -59,12 +59,16 @@ export function OverviewPage() {
   const { call: fetchChannels, data: channelStatusData } =
     useWsCall<ChannelStatusPayload>(Methods.CHANNELS_STATUS);
   const { providers, loading: providersLoading } = useProviders();
-  const { runtimes } = useRuntimes();
-  const { traces } = useTraces({ limit: 8 });
-  const { instances: channelInstances, total: channelInstanceTotal } = useChannelInstances({
-    limit: MAX_OVERVIEW_CHANNEL_INSTANCES,
-    offset: 0,
-  });
+  // const { runtimes } = useRuntimes();
+  const runtimes = { runtimes: [] };
+  // const { traces } = useTraces({ limit: 8 });
+  const traces: any[] = [];
+  // const { instances: channelInstances, total: channelInstanceTotal } = useChannelInstances({
+  //   limit: MAX_OVERVIEW_CHANNEL_INSTANCES,
+  //   offset: 0,
+  // });
+  // const channelInstances: any[] = [];
+  const channelInstanceTotal = 0;
 
   const hasNoProviders = !providersLoading && providers.length === 0;
   const hasNoEnabledProviders =
@@ -100,31 +104,33 @@ export function OverviewPage() {
   const runningAgents = agents.filter((a) => a.isRunning).length;
   const agentTotal = status?.agentTotal ?? agents.length;
   const channelStatusMap = channelStatusData?.channels ?? {};
-  const canSynthesizeOverviewFallbacks =
-    channelInstanceTotal > 0 &&
-    channelInstanceTotal <= MAX_OVERVIEW_CHANNEL_INSTANCES &&
-    channelInstances.length >= channelInstanceTotal;
-  const channelEntries = (() => {
-    const combined = new Map(Object.entries(channelStatusMap));
-    if (canSynthesizeOverviewFallbacks) {
-      for (const instance of channelInstances) {
-        if (combined.has(instance.name)) continue;
-        const fallback = getChannelStatusFallback(instance);
-        if (fallback) {
-          combined.set(instance.name, fallback);
-        }
-      }
-    }
-    return [...combined.entries()];
-  })();
+  // const canSynthesizeOverviewFallbacks =
+  //   channelInstanceTotal > 0 &&
+  //   channelInstanceTotal <= MAX_OVERVIEW_CHANNEL_INSTANCES &&
+  //   channelInstances.length >= channelInstanceTotal;
+  const channelEntries = Object.entries(channelStatusMap);
+  // const channelEntries = (() => {
+  //   const combined = new Map(Object.entries(channelStatusMap));
+  //   if (canSynthesizeOverviewFallbacks) {
+  //     for (const instance of channelInstances) {
+  //       if (combined.has(instance.name)) continue;
+  //       const fallback = getChannelStatusFallback(instance);
+  //       if (fallback) {
+  //         combined.set(instance.name, fallback);
+  //       }
+  //     }
+  //   }
+  //   return [...combined.entries()];
+  // })();
   const totalChannelCount = Math.max(channelEntries.length, channelInstanceTotal);
   const channelsOnline = channelEntries.filter(([, c]) => c.running).length;
-  const channelsNeedingAttention = channelEntries.filter(
-    ([, c]) => getChannelAttentionPriority(c, c.enabled) > 0,
-  ).length;
-  const overviewAttentionCount = canSynthesizeOverviewFallbacks
-    ? channelsNeedingAttention
-    : null;
+  // const channelsNeedingAttention = channelEntries.filter(
+  //   ([, c]) => getChannelAttentionPriority(c, c.enabled) > 0,
+  // ).length;
+  // const overviewAttentionCount = canSynthesizeOverviewFallbacks
+  //   ? channelsNeedingAttention
+  //   : null;
+  const overviewAttentionCount = null;
   const enabledProviders = providers.filter((p) => p.enabled);
   const clientList = health?.clients ?? [];
 
@@ -162,7 +168,6 @@ export function OverviewPage() {
       <Tabs defaultValue="overview">
         <TabsList>
           <TabsTrigger value="overview">{t("tabs.overview")}</TabsTrigger>
-          <TabsTrigger value="usage">{t("tabs.usage")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -282,12 +287,6 @@ export function OverviewPage() {
           {quota?.enabled && quota.entries.length > 0 && (
             <QuotaUsageCard quota={quota} />
           )}
-        </TabsContent>
-
-        <TabsContent value="usage">
-          <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" /></div>}>
-            <UsagePage />
-          </Suspense>
         </TabsContent>
       </Tabs>
     </div>
